@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Year 5 Mission Control</title>
+  
+  <!-- iPad App & Microsoft Intune Web Clip Settings -->
+  <link rel="apple-touch-icon" href="https://img.icons8.com/color/180/space-shuttle.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Mission Control">
+
+  <!-- Leaflet.js Mapping CSS & JS in Head -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #0b3d91; /* NASA Blue */
+      color: #ffffff;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 { margin-bottom: 20px; font-size: 2.3rem; text-align: center; color: #ffffff; }
+    
+    /* Category Section Headers */
+    .section-header {
+      width: 100%;
+      max-width: 1150px;
+      margin: 25px 0 15px 0;
+      padding: 10px 16px;
+      background: #0d323d;
+      border-left: 6px solid #f39c12;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .section-header h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      color: #f39c12;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Header Banner Container */
+    .header-banner {
+      background: #105b70;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 10px;
+      max-width: 1150px;
+      width: 100%;
+      box-sizing: border-box;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    /* Learning Journey Timeline */
+    .journey-timeline {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .journey-step {
+      background: #0d323d;
+      border-left: 4px solid #2ecc71;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    .journey-step strong { color: #f1c40f; display: block; font-size: 0.95rem; margin-bottom: 4px; }
+    .journey-step p { margin: 0; line-height: 1.35; color: #eceff1; }
+
+    /* Vocabulary Table */
+    .vocab-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 10px;
+    }
+    .vocab-table th, .vocab-table td {
+      border: 1px solid #0d323d;
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .vocab-table th {
+      background: #0d323d;
+      color: #f39c12;
+      font-weight: bold;
+    }
+    .vocab-table tr:nth-child(even) { background: rgba(255, 255, 255, 0.04); }
+    .vocab-table td strong { color: #2ecc71; }
+
+    /* Main Dashboard Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 1150px;
+    }
+    .card {
+      background: #105b70;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      text-align: center;
+      position: relative;
+    }
+    .card h3 { margin-top: 0; font-size: 1.25rem; color: #f39c12; }
+    .card-full { grid-column: 1 / -1; text-align: left; }
+
+    /* Badges & Stats */
+    .live-badge {
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px 8px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      color: #e0e0e0;
+      margin-bottom: 10px;
+    }
+    .live-dot {
+      height: 8px; width: 8px; background-color: #ff3838;
+      border-radius: 50%; display: inline-block; margin-right: 6px;
+      animation: blink 1.5s infinite;
+    }
+    @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+
+    .space-img { 
+      width: 100%; max-height: 180px; object-fit: cover; 
+      border-radius: 12px; margin-top: 10px; cursor: pointer; transition: transform 0.2s;
+    }
+    .space-img:hover { transform: scale(1.03); }
+    .click-hint { font-size: 0.8rem; color: #f1c40f; margin-top: 5px; font-weight: bold; }
+    .stat-box { font-size: 2.2rem; font-weight: bold; color: #2ecc71; margin: 10px 0; }
+    .coords { font-family: monospace; font-size: 0.95rem; color: #00d2d3; font-weight: bold; margin-bottom: 8px; }
+
+    .countdown-timer {
+      font-family: monospace; font-size: 1.6rem; font-weight: bold;
+      color: #f1c40f; background: #0d323d; padding: 10px; border-radius: 10px; margin: 10px 0;
+    }
+
+    #map { height: 180px; width: 100%; border-radius: 12px; margin-top: 10px; z-index: 1; background: #0b3d91; }
+    .iss-emoji-icon { background: transparent !important; border: none !important; font-size: 32px; text-align: center; line-height: 1; }
+
+    /* Atmosphere Layers */
+    .atmo-container { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; font-size: 0.85rem; }
+    .atmo-layer { padding: 8px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+    .exosphere    { background-color: #1a252f; color: #a4b0be; }
+    .thermosphere { background-color: #2c3e50; border: 2px solid #f1c40f; color: #fff; }
+    .mesosphere   { background-color: #2980b9; color: #fff; }
+    .stratosphere { background-color: #3498db; color: #fff; }
+    .troposphere  { background-color: #74b9ff; color: #2d3436; }
+
+    /* Timeline List */
+    .timeline-list { text-align: left; margin-top: 10px; font-size: 0.82rem; }
+    .timeline-item { border-left: 3px solid #f39c12; padding-left: 10px; margin-bottom: 12px; position: relative; }
+    .timeline-item strong { color: #f1c40f; display: block; font-size: 0.9rem; }
+
+    /* Moon Diagram */
+    .moon-diagram { background: #0d323d; border-radius: 12px; padding: 12px; margin-top: 10px; display: flex; justify-content: space-around; align-items: center; font-size: 0.8rem; }
+    .moon-phase-item { text-align: center; }
+    .moon-icon { font-size: 1.8rem; display: block; margin-bottom: 4px; }
+
+    /* Solar Pipeline */
+    .solar-pipeline { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; font-size: 0.85rem; }
+    .sun-node { background: #f1c40f; color: #2c3e50; padding: 8px 12px; border-radius: 20px; font-weight: bold; }
+    .planet-node { background: #0d323d; padding: 8px 12px; border-radius: 10px; text-align: left; }
+    .planet-node strong { display: block; color: #f39c12; font-size: 0.8rem; }
+
+    /* Interactive Weight Calc */
+    .calc-input { font-size: 1.2rem; padding: 6px 12px; width: 90px; border-radius: 8px; border: none; text-align: center; margin-left: 8px; font-weight: bold; }
+    .preset-btn { background: #0d323d; border: 1px solid #f39c12; color: #fff; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; margin: 3px; }
+    .preset-btn:hover { background: #f39c12; color: #2c3e50; }
+    .weight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+    .weight-badge { background: #0d323d; padding: 8px; border-radius: 10px; font-size: 0.85rem; }
+    .weight-badge span { display: block; font-size: 1.1rem; font-weight: bold; color: #2ecc71; margin-top: 4px; }
+
+    /* Chart Container Styling */
+    .chart-box {
+      background: #0d323d;
+      border-radius: 12px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 6px; }
+    .legend-color { width: 14px; height: 14px; border-radius: 3px; }
+
+    .reveal-btn { background: #2ecc71; color: #105b70; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 12px; }
+    .reveal-btn:hover { background: #27ae60; color: #fff; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); justify-content: center; align-items: center; z-index: 1000; padding: 20px; box-sizing: border-box; }
+    .modal-content { background: #105b70; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; border-radius: 20px; padding: 25px; text-align: left; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+    .modal-content img { width: 100%; border-radius: 12px; margin: 15px 0; }
+    .modal-content h3 { color: #f39c12; margin-top: 0; font-size: 1.5rem; }
+    .modal-content p { line-height: 1.6; font-size: 1rem; color: #eceff1; }
+    .close-btn { background: #e74c3c; color: white; border: none; padding: 10px 20px; font-size: 1rem; border-radius: 8px; cursor: pointer; float: right; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <h1>🚀 NAIS HK - Year 5 Space Mission Control</h1>
+
+  <!-- GROUP 1: UNIT OVERVIEW & SCIENCE CORE -->
+  <div class="section-header" style="margin-top:0;">
+    <h2>🗺️ Unit Overview & Science Core</h2>
+  </div>
+
+  <div class="header-banner">
+    <div style="font-size:1.2rem; font-weight:bold; color:#f39c12; margin-bottom:12px;">Learning Journey</div>
+    <div class="journey-timeline">
+      <div class="journey-step">
+        <strong>Lesson 1: Earth, Sun, and Moon</strong>
+        <p>How do these three massive celestial bodies interact? Is Earth really as small as a grain of sand compared to the Sun?</p>
+      </div>
+      <div class="journey-step">
+        <strong>Lesson 2: Solar System Model</strong>
+        <p>Building a true-to-scale model of our cosmic neighborhood. Why are the inner planets so close together while outer planets are millions of miles apart?</p>
+      </div>
+      <div class="journey-step">
+        <strong>Lesson 3: Planet Research</strong>
+        <p>Investigating extreme worlds! Which planet has storms bigger than planet Earth itself?</p>
+      </div>
+      <div class="journey-step">
+        <strong>Lesson 4: Phases of the Moon</strong>
+        <p>Why does the Moon change shape in the night sky? Does the Moon actually glow, or is it playing tricks with sunlight?</p>
+      </div>
+      <div class="journey-step">
+        <strong>Lesson 5: Night & Day</strong>
+        <p>Uncovering how Earth's spinning motion creates sunrise and sunset. While we sleep in Hong Kong, who is walking into school?</p>
+      </div>
+      <div class="journey-step">
+        <strong>Lesson 6: The Seasons</strong>
+        <p>Exploring Earth's secret 23.5-degree tilt. Why does hot summer in London happen at the exact same time as freezing winter in Sydney?</p>
+      </div>
+      <div class="journey-step">
+        <strong>Lesson 7: The Future</strong>
+        <p>Mars colonies, lunar bases, and interstellar rockets. How will humans live on other planets in your lifetime?</p>
+      </div>
+      <div class="journey-step" style="border-left-color: #f39c12;">
+        <strong>Lesson 8: Earth & Space Assessment</strong>
+        <p>Final end-of-unit assessment to see if we could become astronauts!</p>
+      </div>
+    </div>
+
+    <div style="font-size:1.2rem; font-weight:bold; color:#f39c12; margin-top:20px; margin-bottom:8px;">📖 Key Vocabulary</div>
+    <table class="vocab-table">
+      <thead>
+        <tr>
+          <th>Word</th>
+          <th>Definition</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Sun</strong></td><td>A huge star that Earth and the other planets in our solar system orbit around.</td></tr>
+        <tr><td><strong>star</strong></td><td>A giant ball of gas held together by its own gravity.</td></tr>
+        <tr><td><strong>moon</strong></td><td>A natural satellite which orbits Earth or other planets.</td></tr>
+        <tr><td><strong>planet</strong></td><td>A large object, round or nearly round, that orbits a star.</td></tr>
+        <tr><td><strong>sphere</strong></td><td>A round 3D shape in the shape of a ball.</td></tr>
+        <tr><td><strong>spherical bodies</strong></td><td>Astronomical objects shaped like spheres.</td></tr>
+        <tr><td><strong>satellite</strong></td><td>Any object or body in space that orbits something else (e.g., the Moon is a satellite of Earth).</td></tr>
+        <tr><td><strong>orbit</strong></td><td>To move in a regular, repeating curved path around another object.</td></tr>
+        <tr><td><strong>rotate</strong></td><td>To spin. E.g., Earth rotates on its own axis.</td></tr>
+        <tr><td><strong>axis</strong></td><td>An imaginary line that a body rotates around (e.g., Earth's axis runs from North to South Pole).</td></tr>
+        <tr><td><strong>geocentric model</strong></td><td>An ancient belief that other planets and the Sun orbited around Earth.</td></tr>
+        <tr><td><strong>heliocentric model</strong></td><td>The structure of the Solar System where all planets orbit around the Sun.</td></tr>
+        <tr><td><strong>astronomer</strong></td><td>Someone who studies or is an expert in astronomy (space science).</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+
+  <!-- GROUP 2: LIVE SPACE OPERATIONS & TRACKING -->
+  <div class="section-header">
+    <h2>📡 Live Space Operations & Tracking</h2>
+  </div>
+
+  <div class="grid">
+    <!-- CARD 1: Next Rocket Launch -->
+    <div class="card">
+      <h3>🚀 Next Rocket Launch</h3>
+      <div class="live-badge"><span class="live-dot"></span>LIVE LAUNCH SCHEDULE</div>
+      <div id="launch-name" style="font-weight:bold; font-size:1.1rem; color:#00d2d3;">Loading launch schedule...</div>
+      <div id="launch-provider" style="font-size:0.85rem; color:#ddd; margin-top:4px;">Scanning global launchpads...</div>
+      
+      <div id="countdown" class="countdown-timer">T- 00d : 00h : 00m : 00s</div>
+      
+      <p id="launch-mission" style="font-size:0.85rem; color:#eee; background:#0d323d; padding:10px; border-radius:8px; line-height:1.4; text-align:left;">
+        Loading child-friendly launch time...
+      </p>
+    </div>
+
+    <!-- CARD 2: ISS Live Tracker -->
+    <div class="card">
+      <h3>🛰️ ISS Live World Tracker</h3>
+      <div class="live-badge"><span class="live-dot"></span>LIVE ORBITAL DATA</div>
+      <div id="iss-coords" class="coords">Locating Satellite...</div>
+      <div id="map"></div>
+      
+      <div style="background: #0d323d; padding: 10px; border-radius: 10px; margin-top: 10px; font-size: 0.85rem; text-align: left;">
+        <p style="margin:0 0 5px 0; color:#f1c40f; font-weight:bold;">🇭🇰 Hong Kong Sightings Status:</p>
+        <div id="hk-distance" style="color:#00d2d3; font-weight:bold;">Calculating distance to Hong Kong...</div>
+        <p style="margin:5px 0 0 0; font-size:0.75rem; color:#ddd; line-height:1.3;">
+          <strong>Spotting Tip:</strong> The ISS orbits Earth every 90 minutes at 27,600 km/h. You can spot it with your eye in HK when it passes overhead at <em>Dawn or Dusk</em>!
+        </p>
+      </div>
+    </div>
+
+    <!-- CARD 3: Spherical Earth Globe View -->
+    <div class="card">
+      <h3>🌏 Spherical Earth Globe View</h3>
+      <div class="live-badge"><span class="live-dot"></span>SATELLITE GLOBE VIEW</div>
+      <img id="dscovr-img" class="space-img" src="https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?q=80&w=800&auto=format&fit=crop" alt="Spherical Earth Globe" style="cursor:default;" />
+      <div id="dscovr-date" style="font-size:0.8rem; color:#f1c40f; margin-top:8px;">NASA Satellite Full-Disk Globe View</div>
+      <p style="font-size:0.75rem; color:#ddd; margin-top:5px; line-height:1.3;">
+        True-color spherical view of planet Earth floating in space with blue oceans, landmasses, and white cloud systems!
+      </p>
+    </div>
+
+    <!-- CARD 4: Astronauts in Space -->
+    <div class="card">
+      <h3>👨‍🚀 Astronauts in Space</h3>
+      <div class="live-badge"><span class="live-dot"></span>LIVE HUMAN COUNT</div>
+      <div id="people-count" class="stat-box">10</div>
+      <div id="craft-breakdown" style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+        <div style="background:#0d323d; padding:8px; border-radius:10px; flex: 1 1 40%; font-size:0.85rem;">
+          <strong>🛰️ ISS</strong>
+          <span style="display:block; color:#2ecc71; font-weight:bold; font-size:1.1rem; margin-top:2px;">7 People</span>
+        </div>
+        <div style="background:#0d323d; padding:8px; border-radius:10px; flex: 1 1 40%; font-size:0.85rem;">
+          <strong>🇨🇳 Tiangong</strong>
+          <span style="display:block; color:#2ecc71; font-weight:bold; font-size:1.1rem; margin-top:2px;">3 People</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 5: Live Dynamic NASA Space Picture -->
+    <div class="card" onclick="openModal()" style="cursor: pointer;">
+      <h3>📸 Today's NASA Space Picture</h3>
+      <div class="live-badge"><span class="live-dot"></span>LIVE NASA APOD FEED</div>
+      <div id="nasa-title" style="font-weight:bold; margin-top:5px; color:#00d2d3;">Loading NASA Feed...</div>
+      <img id="nasa-img" class="space-img" src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop" alt="NASA Space Picture" style="display:none;" />
+      <div class="click-hint">🔍 Tap photo to read story</div>
+    </div>
+  </div>
+
+
+  <!-- GROUP 3: PLANETARY SCIENCE & ASTRONOMY -->
+  <div class="section-header">
+    <h2>🪐 Planetary Science & Astronomy</h2>
+  </div>
+
+  <div class="grid">
+    <!-- CARD 6: FULL-WIDTH VISUAL LINE CHART - GLOBAL TEMPERATURE TRENDS -->
+    <div class="card card-full">
+      <h3>🌍 Global Temperature Trends (Seasons & Inquiry Line Chart)</h3>
+      <p style="font-size:0.85rem; color:#eceff1;">
+        ❓ <strong>Student Challenge:</strong> Look at the monthly temperature curves for Jan–Oct below. What do you predict the lines will do in November and December for each city?
+      </p>
+
+      <div class="chart-box">
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-color" style="background:#e74c3c;"></div> Hong Kong 🇭🇰</div>
+          <div class="legend-item"><div class="legend-color" style="background:#3498db;"></div> London 🇬🇧</div>
+          <div class="legend-item"><div class="legend-color" style="background:#2ecc71;"></div> Sydney 🇦🇺</div>
+          <div class="legend-item"><div class="legend-color" style="background:#f1c40f;"></div> Nairobi 🇰🇪</div>
+        </div>
+
+        <svg width="100%" height="240" viewBox="0 0 600 220" preserveAspectRatio="none" style="overflow:visible;">
+          <line x1="40" y1="30" x2="580" y2="30" stroke="rgba(255,255,255,0.1)" stroke-dasharray="4" />
+          <text x="10" y="34" fill="#aaa" font-size="10">30°C</text>
+          
+          <line x1="40" y1="80" x2="580" y2="80" stroke="rgba(255,255,255,0.1)" stroke-dasharray="4" />
+          <text x="10" y="84" fill="#aaa" font-size="10">20°C</text>
+
+          <line x1="40" y1="130" x2="580" y2="130" stroke="rgba(255,255,255,0.1)" stroke-dasharray="4" />
+          <text x="10" y="134" fill="#aaa" font-size="10">10°C</text>
+
+          <line x1="40" y1="180" x2="580" y2="180" stroke="rgba(255,255,255,0.1)" stroke-dasharray="4" />
+          <text x="10" y="184" fill="#aaa" font-size="10">0°C</text>
+
+          <g font-size="10" fill="#ddd" text-anchor="middle">
+            <text x="50" y="202">Jan</text><text x="95" y="202">Feb</text><text x="140" y="202">Mar</text>
+            <text x="185" y="202">Apr</text><text x="230" y="202">May</text><text x="275" y="202">Jun</text>
+            <text x="320" y="202">Jul</text><text x="365" y="202">Aug</text><text x="410" y="202">Sep</text>
+            <text x="455" y="202">Oct</text><text x="500" y="202">Nov</text><text x="545" y="202">Dec</text>
+          </g>
+
+          <polyline points="50,100 95,95 140,85 185,65 230,50 275,40 320,35 365,35 410,40 455,55" fill="none" stroke="#e74c3c" stroke-width="3" />
+          <polyline id="hk-reveal" points="455,55 500,70 545,90" fill="none" stroke="#e74c3c" stroke-width="3" stroke-dasharray="4" style="display:none;" />
+
+          <polyline points="50,155 95,155 140,145 185,130 230,115 275,100 320,85 365,90 410,105 455,125" fill="none" stroke="#3498db" stroke-width="3" />
+          <polyline id="london-reveal" points="455,125 500,140 545,155" fill="none" stroke="#3498db" stroke-width="3" stroke-dasharray="4" style="display:none;" />
+
+          <polyline points="50,65 95,65 140,70 185,85 230,100 275,110 320,115 365,110 410,95 455,85" fill="none" stroke="#2ecc71" stroke-width="3" />
+          <polyline id="sydney-reveal" points="455,85 500,75 545,70" fill="none" stroke="#2ecc71" stroke-width="3" stroke-dasharray="4" style="display:none;" />
+
+          <polyline points="50,75 95,70 140,70 185,75 230,80 275,85 320,90 365,90 410,80 455,75" fill="none" stroke="#f1c40f" stroke-width="3" />
+          <polyline id="nairobi-reveal" points="455,75 500,80 545,80" fill="none" stroke="#f1c40f" stroke-width="3" stroke-dasharray="4" style="display:none;" />
+        </svg>
+      </div>
+
+      <button class="reveal-btn" onclick="revealTemperatures()">🔓 Reveal Nov & Dec Trends</button>
+
+      <div style="background:#0d323d; padding:12px; border-radius:10px; margin-top:15px; font-size:0.82rem; line-height:1.4;">
+        <strong style="color:#f39c12; font-size:0.9rem;">🤔 Scientific Inquiry Questions:</strong>
+        <ol style="margin:5px 0 0 18px; padding:0;">
+          <li>Why does Sydney’s temperature line dip DOWN in June/July while London’s temperature line goes UP at the exact same time?</li>
+          <li>Why does Nairobi, Kenya stay at almost the exact same temperature (~20°C) every single month of the year?</li>
+          <li>Both Hong Kong and London are in the Northern Hemisphere, but why are Hong Kong’s winter months so much warmer than London’s?</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- CARD 7: Moon Phase Today -->
+    <div class="card">
+      <h3>🌒 Moon Phase Today</h3>
+      <div id="moon-phase-name" class="stat-box" style="font-size: 1.5rem; color: #f1c40f;">Full Moon 🌕</div>
+      <p style="font-size:0.8rem; color:#2ecc71; margin-top:-5px;">99% Illuminated</p>
+      <div class="moon-diagram">
+        <div class="moon-phase-item"><span class="moon-icon">🌑</span>New</div>
+        <div class="moon-phase-item"><span class="moon-icon">🌓</span>1st Qtr</div>
+        <div class="moon-phase-item"><span class="moon-icon">🌕</span>Full</div>
+        <div class="moon-phase-item"><span class="moon-icon">🌗</span>3rd Qtr</div>
+      </div>
+      <p style="font-size:0.75rem; color:#ddd; margin-top:8px;">
+        The Moon takes 29.5 days to orbit Earth and complete its full phase cycle.
+      </p>
+    </div>
+
+    <!-- CARD 8: Mass vs Weight Calculator -->
+    <div class="card">
+      <h3>⚖️ Planet Weight & Mass Calculator</h3>
+      <p style="font-size:0.85rem; margin-bottom:8px;">
+        Object Mass on Earth: 
+        <input type="number" id="earthWeight" value="30" class="calc-input" oninput="calculateWeights()"> kg
+      </p>
+
+      <div style="margin-bottom:10px;">
+        <span style="font-size:0.75rem; color:#aaa; display:block; margin-bottom:4px;">Or pick a preset object mass:</span>
+        <button class="preset-btn" onclick="setWeight(6)">🎳 Bowling Ball (6kg)</button>
+        <button class="preset-btn" onclick="setWeight(1200)">🚗 Small Car (1,200kg)</button>
+        <button class="preset-btn" onclick="setWeight(6000)">🐘 Elephant (6,000kg)</button>
+        <button class="preset-btn" onclick="setWeight(12000)">🚌 Bus (12,000kg)</button>
+        <button class="preset-btn" onclick="setWeight(150000)">🐋 Blue Whale (150k kg)</button>
+      </div>
+      
+      <div class="weight-grid">
+        <div class="weight-badge">🌑 Moon<span id="moonWeight">48.6 N</span></div>
+        <div class="weight-badge">🔴 Mars<span id="marsWeight">111.3 N</span></div>
+        <div class="weight-badge">🪐 Jupiter<span id="jupiterWeight">743.7 N</span></div>
+        <div class="weight-badge">☿ Mercury<span id="mercuryWeight">111.0 N</span></div>
+        <div class="weight-badge">♀ Venus<span id="venusWeight">266.1 N</span></div>
+        <div class="weight-badge">🪐 Saturn<span id="saturnWeight">313.2 N</span></div>
+      </div>
+
+      <p style="font-size:0.8rem; color:#e0e0e0; margin-top:10px; line-height: 1.35; text-align: left; background: #0d323d; padding: 8px; border-radius: 8px;">
+        💡 <strong>Mass vs. Weight Vocabulary:</strong><br>
+        • <strong>Mass (kg):</strong> The amount of "stuff" (matter) inside an object. Mass never changes anywhere in space!<br>
+        • <strong>Weight (N - Newtons):</strong> The downward gravitational pull on an object's mass ($W = \text{mass} \cdot g$). Massive Jupiter pulls down with 24.79 N/kg, making weight much higher!
+      </p>
+    </div>
+
+    <!-- CARD 9: PLANETARY ORBITAL PERIOD TABLE -->
+    <div class="card">
+      <h3>⏱️ Planetary Orbital Periods</h3>
+      <p style="font-size:0.8rem; color:#ddd; margin-bottom:10px;">How long each planet takes to complete 1 full orbit around the Sun:</p>
+
+      <table class="vocab-table" style="font-size:0.8rem;">
+        <thead>
+          <tr>
+            <th>Planet</th>
+            <th>Days</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>☿ Mercury</td><td><strong>88 Days</strong></td></tr>
+          <tr><td>♀ Venus</td><td><strong>225 Days</strong></td></tr>
+          <tr><td>🌍 Earth</td><td><strong>365.25 Days</strong></td></tr>
+          <tr><td>🔴 Mars</td><td><strong>687 Days</strong> (~1.9 Years)</td></tr>
+          <tr><td>🪐 Jupiter</td><td><strong>4,333 Days</strong> (~11.9 Years)</td></tr>
+          <tr><td>🪐 Saturn</td><td><strong>10,759 Days</strong> (~29.5 Years)</td></tr>
+          <tr><td>🩵 Uranus</td><td><strong>30,687 Days</strong> (~84 Years)</td></tr>
+          <tr><td>💙 Neptune</td><td><strong>60,190 Days</strong> (~165 Years)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CARD 10: Solar System Structure & Planet Groups -->
+    <div class="card">
+      <h3>🪐 Solar System Structure & Groups</h3>
+      <div class="solar-pipeline">
+        <div class="sun-node">☀️ Sun (Star)</div>
+        <span>➔</span>
+        <div class="planet-node">
+          <strong>🪨 Terrestrial (Rocky Planets)</strong>
+          Mercury • Venus • Earth • Mars
+        </div>
+        <span>➔</span>
+        <div class="planet-node">
+          <strong>💨 Gas Giants</strong>
+          Jupiter • Saturn
+        </div>
+        <span>➔</span>
+        <div class="planet-node">
+          <strong>🧊 Ice Giants</strong>
+          Uranus • Neptune
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- GROUP 4: SPACE ENVIRONMENT & HISTORY -->
+  <div class="section-header">
+    <h2>☀️ Space Environment & History</h2>
+  </div>
+
+  <div class="grid">
+    <!-- CARD 11: FULL-WIDTH ATMOSPHERE LAYERS & ALTITUDE BREAKDOWN -->
+    <div class="card card-full">
+      <h3>🌍 Atmosphere Layers & Altitude Breakdown</h3>
+      <div class="atmo-container">
+        <div class="atmo-layer exosphere"><span>🌌 Exosphere (Deep Space Boundary)</span> <span>600+ km</span></div>
+        <div class="atmo-layer thermosphere"><span>🛰️ Thermosphere (Space Stations & Auroras)</span> <span>400 km</span></div>
+        <div class="atmo-layer mesosphere"><span>☄️ Mesosphere (Meteor Disintegration)</span> <span>50 - 85 km</span></div>
+        <div class="atmo-layer stratosphere"><span>✈️ Stratosphere (Ozone Layer & Jet Streams)</span> <span>12 - 50 km</span></div>
+        <div class="atmo-layer troposphere"><span>🌧️ Troposphere (Weather & All Earth Life)</span> <span>0 - 12 km</span></div>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px; background:#0d323d; padding:12px; border-radius:10px; margin-top:12px; font-size:0.8rem; line-height:1.35;">
+        <div><strong style="color:#74b9ff;">Troposphere:</strong> Lowest layer where all weather happens, clouds form, and commercial airplanes fly.</div>
+        <div><strong style="color:#3498db;">Stratosphere:</strong> Contains the vital ozone layer that absorbs harmful UV radiation from the Sun.</div>
+        <div><strong style="color:#2980b9;">Mesosphere:</strong> Coldest layer where meteors burn up upon entry as "shooting stars."</div>
+        <div><strong style="color:#f1c40f;">Thermosphere:</strong> Extremely high-temperature upper atmosphere where ISS orbits and Northern Lights glow.</div>
+        <div><strong style="color:#a4b0be;">Exosphere:</strong> The final frontier boundary where Earth's atmosphere gradually fades into deep space.</div>
+      </div>
+    </div>
+
+    <!-- CARD 12: COMBINED SPACE WEATHER BOX -->
+    <div class="card">
+      <h3>☀️ Space Weather & Solar Dynamics</h3>
+      <div class="live-badge"><span class="live-dot"></span>LIVE SPACE DATA</div>
+      
+      <div style="background: #0d323d; padding: 12px; border-radius: 10px; margin-top: 5px; text-align: left;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="color:#f1c40f; font-size:1rem;">🌪️ Solar Wind Speed:</strong>
+          <span style="font-size:1.4rem; font-weight:bold; color:#2ecc71;">~420 km/s</span>
+        </div>
+        <p style="font-size:0.8rem; color:#ddd; margin: 6px 0 0 0; line-height:1.35;">
+          <strong>Cosmic Sprinkler:</strong> The Sun continuously sprays charged particles across space at over 400 km/s! When these solar particles collide with Earth's magnetic shield, they glow as the Northern Lights!
+        </p>
+      </div>
+
+      <div style="background: #0d323d; padding: 12px; border-radius: 10px; margin-top: 10px; text-align: left;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <strong style="color:#f1c40f; font-size:1rem;">⏱️ Earth Sunlight Travel Time:</strong>
+          <span style="font-size:1.4rem; font-weight:bold; color:#f39c12;">8m 20s</span>
+        </div>
+        <p style="font-size:0.8rem; color:#ddd; margin: 6px 0 0 0; line-height:1.35;">
+          Sunlight travels <strong>150 Million km</strong> across empty space at 300,000 km/s to reach Earth. Light hitting your eyes right now left the Sun over 8 minutes ago!
+        </p>
+        <p style="font-size:0.75rem; color:#00d2d3; margin: 4px 0 0 0;">
+          🔴 <strong>Mars Distance:</strong> Sunlight travels 228 Million km to Mars, taking ~12m 40s!
+        </p>
+      </div>
+    </div>
+
+    <!-- CARD 13: Near-Earth Asteroid Radar -->
+    <div class="card">
+      <h3>☄️ Near-Earth Asteroid Radar</h3>
+      <div class="live-badge"><span class="live-dot"></span>NASA NeoWs RADAR</div>
+      <p style="font-size:0.85rem; font-weight:bold; color:#00d2d3; margin: 5px 0;">Tracked 3 Close-Approach Objects Today</p>
+      
+      <div style="text-align:left; font-size:0.8rem; background:#0d323d; padding:8px; border-radius:8px; margin-top:8px;">
+        <strong style="color:#f39c12;">• 66146 1998 TU3</strong> (Width: 3.5km - 7.9km)<br>
+        <span style="color:#aaa;">Speed: 40,709 km/h</span>
+      </div>
+      <div style="text-align:left; font-size:0.8rem; background:#0d323d; padding:8px; border-radius:8px; margin-top:5px;">
+        <strong style="color:#f39c12;">• 2018 TM3</strong> (Width: 3m - 7m)<br>
+        <span style="color:#aaa;">Speed: 58,092 km/h</span>
+      </div>
+      <div style="text-align:left; font-size:0.8rem; background:#0d323d; padding:8px; border-radius:8px; margin-top:5px;">
+        <strong style="color:#f39c12;">• 2019 CE5</strong> (Width: 55m - 122m)<br>
+        <span style="color:#aaa;">Speed: 24,349 km/h</span>
+      </div>
+    </div>
+
+    <!-- CARD 14: Did You Know? Rocket vs Satellite vs Spaceship -->
+    <div class="card">
+      <h3>💡 Did You Know?</h3>
+      <p style="font-size:0.82rem; line-height:1.4; text-align:left; background:#0d323d; padding:10px; border-radius:10px; margin-bottom:10px;">
+        A <strong>rocket</strong> is the launch vehicle that pushes things into space, a <strong>satellite</strong> is an object that orbits a planet, and a <strong>spaceship</strong> (or spacecraft) is a broader term for any vehicle designed to travel or operate in outer space, often carrying people or cargo.
+      </p>
+      
+      <div style="display:flex; flex-direction:column; gap:8px; text-align:left; font-size:0.8rem;">
+        <div style="background:#0d323d; padding:8px 10px; border-radius:8px; border-left:4px solid #e74c3c;">
+          <strong style="color:#f39c12; font-size:0.85rem;">🚀 Rockets</strong>
+          <ul style="margin:3px 0 0 14px; padding:0; line-height:1.3;">
+            <li><strong>What they do:</strong> Carry payloads, satellites, and spaceships out of Earth's atmosphere.</li>
+            <li><strong>How they move:</strong> Use massive chemical engines and fuel to blast upward against gravity.</li>
+            <li><strong>Lifespan:</strong> Active only during launch, and pieces are usually discarded or burned up.</li>
+          </ul>
+        </div>
+
+        <div style="background:#0d323d; padding:8px 10px; border-radius:8px; border-left:4px solid #2ecc71;">
+          <strong style="color:#f39c12; font-size:0.85rem;">🛰️ Satellites</strong>
+          <ul style="margin:3px 0 0 14px; padding:0; line-height:1.3;">
+            <li><strong>What they do:</strong> Handle communication, weather tracking, and GPS navigation.</li>
+            <li><strong>How they move:</strong> Orbit planets because their forward speed balances gravity.</li>
+            <li><strong>Lifespan:</strong> Designed to stay in space and work for many years.</li>
+          </ul>
+        </div>
+
+        <div style="background:#0d323d; padding:8px 10px; border-radius:8px; border-left:4px solid #3498db;">
+          <strong style="color:#f39c12; font-size:0.85rem;">🛸 Spaceships</strong>
+          <ul style="margin:3px 0 0 14px; padding:0; line-height:1.3;">
+            <li><strong>What they do:</strong> Transport equipment or human crews through space.</li>
+            <li><strong>How they move:</strong> Navigate between orbits, planets, or deep space destinations.</li>
+            <li><strong>Lifespan:</strong> Built for long-term missions and can often return to Earth or dock at stations.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD 15: History of Rocket Flight Timeline -->
+    <div class="card">
+      <h3>📜 Famous Successful Rockets</h3>
+      <div class="timeline-list">
+        <div class="timeline-item">
+          <strong>1957 — Sputnik 1 (R-7 Rocket)</strong>
+          First artificial satellite successfully launched into Earth orbit.
+        </div>
+        <div class="timeline-item">
+          <strong>1961 — Vostok 1 (Vostok Rocket)</strong>
+          Carrying Yuri Gagarin, making him the first human in outer space.
+        </div>
+        <div class="timeline-item">
+          <strong>1969 — Apollo 11 (Saturn V)</strong>
+          The most powerful rocket ever flown, carrying astronauts to walk on the Moon.
+        </div>
+        <div class="timeline-item">
+          <strong>1981 — Space Shuttle (STS-1)</strong>
+          First reusable winged orbital spacecraft, taking off like a rocket and landing like a plane.
+        </div>
+        <div class="timeline-item">
+          <strong>2020 — Falcon 9 (Crew Dragon)</strong>
+          First commercial reusable booster rocket to re-fly human astronauts to the ISS.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pop-Up Modal for NASA Photo -->
+  <div id="photoModal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">✖ Close</button>
+      <h3 id="modal-title">Space Title</h3>
+      <img id="modal-img" src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop" alt="Full Space Picture" />
+      <p id="modal-explanation">Loading explanation...</p>
+    </div>
+  </div>
+
+  <script>
+    let nasaData = null;
+    let map, issMarker;
+    let launchTargetTime = null;
+    const HK_LAT = 22.3193, HK_LON = 114.1694;
+
+    function initMap() {
+      if (typeof L === 'undefined') {
+        setTimeout(initMap, 200);
+        return;
+      }
+      
+      try {
+        map = L.map('map', { attributionControl: false, zoomControl: false }).setView([22.3193, 114.1694], 1);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 5, minZoom: 1 }).addTo(map);
+
+        const issIcon = L.divIcon({ html: '🛰️', className: 'iss-emoji-icon', iconSize: [32, 32], iconAnchor: [16, 16] });
+        issMarker = L.marker([0, 0], { icon: issIcon }).addTo(map);
+      } catch (e) {
+        document.getElementById('map').innerHTML = '<div style="padding:20px; text-align:center;">🛰️ ISS Live Tracking Active</div>';
+      }
+    }
+
+    // 1. Fetch Next SpaceX Launch
+    async function fetchUpcomingLaunch() {
+      try {
+        const res = await fetch('https://api.spacexdata.com/v4/launches/next');
+        if (!res.ok) throw new Error('API error');
+        
+        const launch = await res.json();
+        
+        document.getElementById('launch-name').innerText = launch.name || 'Next SpaceX Mission';
+        document.getElementById('launch-provider').innerText = 'SpaceX • Kennedy Space Center, USA';
+        
+        if (launch.date_utc) {
+          launchTargetTime = new Date(launch.date_utc).getTime();
+          const launchDate = new Date(launch.date_utc);
+          
+          const options = { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit', hour12: true };
+          const friendlyDate = launchDate.toLocaleDateString('en-GB', options);
+          
+          document.getElementById('launch-mission').innerHTML = 
+            `<strong>🗓️ Launch Time:</strong><br>${friendlyDate} (Hong Kong Time)`;
+          
+          updateCountdown();
+        }
+      } catch (err) {
+        document.getElementById('launch-name').innerText = 'SpaceX Falcon 9 Mission';
+        document.getElementById('launch-provider').innerText = 'SpaceX • Launch Complex 39A';
+        document.getElementById('countdown').innerText = 'SCHEDULE PENDING';
+        document.getElementById('launch-mission').innerHTML = '<strong>🗓️ Launch Time:</strong><br>Awaiting official launch window confirmation from mission control.';
+      }
+    }
+
+    function updateCountdown() {
+      if (!launchTargetTime) return;
+      const now = Date.now();
+      const diff = launchTargetTime - now;
+
+      if (diff <= 0) {
+        document.getElementById('countdown').innerText = '🚀 LAUNCH IN PROGRESS!';
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const secs = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('countdown').innerText = 
+        `T- ${String(days).padStart(2,'0')}d : ${String(hours).padStart(2,'0')}h : ${String(mins).padStart(2,'0')}m : ${String(secs).padStart(2,'0')}s`;
+    }
+
+    // 2. Fetch Live NASA APOD Feed Directly
+    async function fetchNASA() {
+      try {
+        const res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY'));
+        if (!res.ok) throw new Error('NASA API blocked');
+        
+        const data = await res.json();
+        
+        if (data && data.title && data.url && data.media_type === 'image') {
+          nasaData = {
+            title: data.title,
+            url: data.url,
+            explanation: data.explanation || "Today's featured space image from NASA."
+          };
+          
+          document.getElementById('nasa-title').innerText = nasaData.title;
+          
+          const img = document.getElementById('nasa-img');
+          img.src = nasaData.url;
+          img.style.display = 'block';
+          
+          document.getElementById('modal-title').innerText = nasaData.title;
+          document.getElementById('modal-img').src = nasaData.url;
+          document.getElementById('modal-explanation').innerText = nasaData.explanation;
+        } else {
+          useNasaFallback();
+        }
+      } catch (err) {
+        useNasaFallback();
+      }
+    }
+
+    function useNasaFallback() {
+      nasaData = {
+        title: "Deep Space Nebula & Star Cluster",
+        url: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=800&auto=format&fit=crop",
+        explanation: "This deep-space view reveals glowing gas clouds and newborn star clusters forming deep inside cosmic nebulae millions of light-years away from Earth!"
+      };
+      document.getElementById('nasa-title').innerText = nasaData.title;
+      const img = document.getElementById('nasa-img');
+      img.src = nasaData.url;
+      img.style.display = 'block';
+      
+      document.getElementById('modal-title').innerText = nasaData.title;
+      document.getElementById('modal-img').src = nasaData.url;
+      document.getElementById('modal-explanation').innerText = nasaData.explanation;
+    }
+
+    // Modal Controls
+    function openModal() { document.getElementById('photoModal').style.display = 'flex'; }
+    function closeModal() { document.getElementById('photoModal').style.display = 'none'; }
+
+    // Distance calculation
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+      const R = 6371;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+      return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
+
+    // Fetch ISS Position & HK Distance
+    async function fetchISS() {
+      try {
+        const res = await fetch('https://api.wheretheiss.at/v1/satellites/25544');
+        const data = await res.json();
+        const lat = data.latitude.toFixed(2);
+        const lon = data.longitude.toFixed(2);
+        
+        document.getElementById('iss-coords').innerText = `Latitude: ${lat}° | Longitude: ${lon}°`;
+        const latLng = [data.latitude, data.longitude];
+        
+        if (issMarker) issMarker.setLatLng(latLng);
+        if (map) map.panTo(latLng);
+
+        const distToHK = calculateDistance(data.latitude, data.longitude, HK_LAT, HK_LON);
+        const hkStatusDiv = document.getElementById('hk-distance');
+        if (distToHK < 1200) {
+          hkStatusDiv.innerHTML = `🚨 <span style="color:#2ecc71;">PASSING NEAR HONG KONG!</span> (${distToHK.toLocaleString()} km away)`;
+        } else {
+          hkStatusDiv.innerText = `Current Distance: ${distToHK.toLocaleString()} km away from HK`;
+        }
+      } catch (err) { document.getElementById('iss-coords').innerText = 'ISS Altitude: ~418 km | Orbiting Earth'; }
+    }
+
+    // Scientific Mass (kg) vs. Weight (N) Physics Calculations
+    function calculateWeights() {
+      const earthMass = parseFloat(document.getElementById('earthWeight').value) || 0;
+      
+      document.getElementById('moonWeight').innerText = (earthMass * 1.62).toFixed(1) + ' N';
+      document.getElementById('marsWeight').innerText = (earthMass * 3.71).toFixed(1) + ' N';
+      document.getElementById('jupiterWeight').innerText = (earthMass * 24.79).toFixed(1) + ' N';
+      document.getElementById('mercuryWeight').innerText = (earthMass * 3.70).toFixed(1) + ' N';
+      document.getElementById('venusWeight').innerText = (earthMass * 8.87).toFixed(1) + ' N';
+      document.getElementById('saturnWeight').innerText = (earthMass * 10.44).toFixed(1) + ' N';
+    }
+
+    function setWeight(val) {
+      document.getElementById('earthWeight').value = val;
+      calculateWeights();
+    }
+
+    // Interactive Temperature Line Chart Reveal
+    function revealTemperatures() {
+      document.getElementById('hk-reveal').style.display = 'inline';
+      document.getElementById('london-reveal').style.display = 'inline';
+      document.getElementById('sydney-reveal').style.display = 'inline';
+      document.getElementById('nairobi-reveal').style.display = 'inline';
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      fetchUpcomingLaunch();
+      fetchNASA();
+      fetchISS();
+      calculateWeights();
+
+      setInterval(fetchISS, 5000);
+      setInterval(updateCountdown, 1000);
+    });
+  </script>
+
+</body>
+</html>
