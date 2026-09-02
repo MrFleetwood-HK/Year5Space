@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>NAIS HK - Coding Week 2026</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        :root {
+            --bg-midnight: #0b3d91;
+            --card-slate: #105b70;
+            --inset-dark: #0d323d;
+            --terminal-bg: #0d1117;
+            --terminal-green: #00ff66;
+            --terminal-dim: #008833;
+            --text-main: #ffffff;
+            --text-secondary: #00d2d3;
+            --accent-gold: #f39c12;
+            --accent-green: #2ecc71;
+            
+            /* NAIS HK House Colours */
+            --house-sandringham: #f1c40f; /* Yellow */
+            --house-caernarfon: #2ecc71;  /* Green */
+            --house-windsor: #e74c3c;      /* Red */
+            --house-balmoral: #3498db;     /* Blue */
+
+            --pad: 1.2rem;
+            --r: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            background-color: var(--bg-midnight);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 16px;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; font-weight: 600; }
+
+        #app { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; }
+
+        /* --- HACKER FONT SPECIFIC CLASS --- */
+        .hacker-font {
+            font-family: 'Courier New', Courier, monospace !important;
+            color: var(--terminal-green) !important;
+            text-shadow: 0 0 5px var(--terminal-dim);
+            letter-spacing: 0.5px;
+        }
+
+        header {
+            background-color: var(--terminal-bg);
+            padding: calc(env(safe-area-inset-top) + 12px) 20px 12px;
+            border-bottom: 2px solid var(--terminal-dim);
+            text-align: center;
+            z-index: 50;
+        }
+        .header-title { font-weight: 800; font-size: 1.3rem; }
+
+        .page {
+            display: none;
+            opacity: 0;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px;
+            z-index: 10;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .page.active { display: block; opacity: 1; position: relative; }
+
+        h2 { margin-bottom: 15px; font-weight: 700; text-transform: uppercase; font-size: 1.4rem; }
+        h3 { color: var(--text-secondary); margin-bottom: 10px; font-weight: 700; font-size: 1.15rem; }
+
+        .card {
+            background: var(--card-slate);
+            padding: var(--pad);
+            border-radius: var(--r);
+            margin-bottom: 18px;
+            border: 1px solid var(--inset-dark);
+        }
+
+        .data-panel {
+            background: var(--inset-dark);
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin-top: 8px;
+        }
+
+        /* --- 1 ROW OF 6 LAUNCHER --- */
+        #home-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100%;
+            padding: 10px;
+        }
+
+        .hero-banner { text-align: center; margin-bottom: 25px; max-width: 650px; }
+        .hero-title { font-size: 2.2rem; font-weight: 900; line-height: 1.1; margin-bottom: 12px;}
+        .hero-sub { font-size: 1.05rem; color: var(--text-main); line-height: 1.4; opacity: 0.95; }
+
+        .app-launcher-row {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            overflow-x: auto;
+            padding: 10px 5px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tile-small {
+            min-width: 110px;
+            height: 110px;
+            background: var(--card-slate);
+            border-radius: var(--r);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 4px solid var(--text-secondary);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .tile-small:active { transform: scale(0.95); background-color: #0b4e63; }
+        .tile-icon { font-size: 2.2rem; margin-bottom: 5px; }
+        .tile-label { font-size: 0.85rem; font-weight: 700; text-align: center; color: var(--text-main); }
+
+        .game-banner {
+            background: var(--terminal-bg);
+            margin-top: 25px;
+            width: 100%;
+            max-width: 720px;
+            border-radius: var(--r);
+            border: 2px solid var(--terminal-green);
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,255,102,0.2);
+        }
+        .game-banner:active { transform: scale(0.98); }
+
+        /* --- NAV BACK BAR --- */
+        .nav-back-bar {
+            padding: 10px 0 15px;
+            display: flex;
+            align-items: center;
+        }
+        .btn-home {
+            background: var(--inset-dark);
+            color: var(--accent-gold);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 1rem;
+            border: 1px solid var(--accent-gold);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* --- VERTICAL TIMELINE --- */
+        .timeline-container {
+            position: relative;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 10px 0;
+        }
+        .timeline-container::after {
+            content: '';
+            position: absolute;
+            width: 4px;
+            background-color: var(--inset-dark);
+            top: 0; bottom: 0; left: 50%;
+            margin-left: -2px;
+            border-radius: 2px;
+        }
+        .timeline-item {
+            padding: 10px 30px;
+            position: relative;
+            background-color: inherit;
+            width: 50%;
+        }
+        .timeline-left { left: 0; }
+        .timeline-right { left: 50%; }
+        
+        .timeline-item::after {
+            content: ''; position: absolute;
+            width: 16px; height: 16px;
+            background-color: white;
+            top: 25px; border-radius: 50%; z-index: 1;
+        }
+        .timeline-left::after { right: -8px; }
+        .timeline-right::after { left: -8px; }
+
+        .timeline-card {
+            background: var(--card-slate);
+            border-radius: var(--r);
+            padding: 15px;
+            position: relative;
+        }
+        .card-person { border: 2px solid var(--accent-gold); }
+        .card-event { border: 2px solid var(--text-secondary); }
+        
+        .timeline-left::after { border: 4px solid var(--accent-gold); } /* Alternate dots based on type below in inline styles */
+
+        .timeline-year {
+            font-size: 1.4rem; font-weight: 800;
+            color: var(--accent-gold);
+            margin-bottom: 5px;
+        }
+        .event-year { color: var(--text-secondary); }
+
+        /* Mobile Responsive Timeline */
+        @media screen and (max-width: 600px) {
+            .timeline-container::after { left: 20px; }
+            .timeline-item { width: 100%; padding-left: 50px; padding-right: 0; }
+            .timeline-right { left: 0; }
+            .timeline-left::after, .timeline-right::after { left: 12px; }
+        }
+
+        /* --- INTERACTIVE SENTENCE LAB (DROPDOWNS) --- */
+        .sentence-row { margin-bottom: 15px; font-size: 0.95rem; line-height: 1.6; }
+        .sentence-select {
+            background: var(--inset-dark); color: #fff;
+            border: 2px solid var(--text-secondary);
+            padding: 4px 8px; border-radius: 4px;
+            font-size: 0.9rem; outline: none; font-weight: bold;
+        }
+        .tick-mark { color: var(--accent-green); font-weight: bold; display: none; margin-left: 8px; }
+
+        /* --- FLOWCHART --- */
+        .flowchart {
+            display: flex; flex-direction: row; justify-content: center; align-items: center;
+            gap: 15px; text-align: center; margin: 15px 0; overflow-x: auto;
+        }
+        .flow-step {
+            background: var(--inset-dark); border: 2px solid var(--accent-gold);
+            padding: 10px; border-radius: 8px; flex: 1; min-width: 110px;
+        }
+        .flow-arrow { font-size: 1.5rem; color: var(--accent-gold); }
+
+        /* ================= GAMES ARCADE STYLES ================= */
+        #games-menu { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;}
+        .game-menu-btn {
+            background: var(--inset-dark); border: 2px solid var(--terminal-green);
+            color: var(--text-main); font-size: 1.2rem; font-weight: bold;
+            padding: 15px 20px; border-radius: 12px; width: 100%; max-width: 400px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .game-menu-btn:active { background: var(--card-slate); }
+        .game-container { display: none; }
+
+        /* 1. House Game Grid */
+        .arena-container { display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 20px; align-items: center; margin-top: 10px; }
+        #game-grid {
+            width: 320px; height: 320px; background: var(--inset-dark);
+            border-radius: 12px; border: 3px solid #000; display: grid;
+            grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr);
+            gap: 2px; padding: 2px; position: relative;
+        }
+        .game-cell {
+            background-color: rgba(255, 255, 255, 0.1); border-radius: 4px;
+            display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+        }
+        .cell-obstacle { background-color: #34495e !important; }
+        #player {
+            width: 60px; height: 60px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; transition: all 0.15s ease-in-out; position: absolute; z-index: 10;
+        }
+        .house-marker {
+            position: absolute; top: 2px; right: 2px; width: 18px; height: 18px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.7rem; font-weight: 800; color: #000; background: #fff;
+        }
+        /* Specific Base Colors */
+        .base-yellow { background-color: var(--house-sandringham) !important; }
+        .base-green { background-color: var(--house-caernarfon) !important; }
+        .base-red { background-color: var(--house-windsor) !important; }
+        .base-blue { background-color: var(--house-balmoral) !important; }
+
+        .control-pad {
+            display: grid; grid-template-columns: repeat(3, 50px); grid-template-rows: repeat(3, 50px);
+            gap: 5px; justify-content: center;
+        }
+        .pad-btn { background: var(--inset-dark); border-radius: 8px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); }
+        .pad-btn:active { background: var(--text-secondary); color: #000; }
+        .house-legend { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 15px; }
+        .legend-item { padding: 6px; border-radius: 6px; font-size: 0.8rem; font-weight: 700; color: #000; text-align: center;}
+
+        /* 2. Binary Pixel Grid */
+        .binary-wrap { display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 15px 0;}
+        .binary-grid {
+            display: grid; grid-template-columns: repeat(5, 40px); grid-template-rows: repeat(5, 40px);
+            gap: 2px; justify-content: center;
+        }
+        .binary-cell {
+            background: #ffffff; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; color: #ccc; font-weight: bold; cursor: pointer; border: 1px solid #999;
+        }
+        .binary-cell.on { background: #000000; color: #333; }
+        
+        .binary-output-box {
+            background: var(--terminal-bg); color: var(--terminal-green); font-family: monospace;
+            padding: 10px; border-radius: 8px; width: 100%; max-width: 250px; text-align: center;
+            letter-spacing: 2px; font-size: 1.1rem; word-break: break-all;
+        }
+
+        /* 3. Secret Vault */
+        .vault-input {
+            background: var(--inset-dark); border: 2px solid var(--text-secondary); color: #fff;
+            font-size: 1.1rem; padding: 8px; width: 100%; border-radius: 8px; margin-bottom: 10px;
+        }
+        .vault-btn {
+            background: var(--text-secondary); color: #000; padding: 12px 20px;
+            font-size: 1.1rem; border-radius: 8px; width: 100%;
+        }
+
+    </style>
+</head>
+<body onload="initApp()">
+
+    <div id="app">
+        <header>
+            <div class="header-title hacker-font">NAIS HK - Coding Week 2026</div>
+        </header>
+
+        <!-- ================= HOME SCREEN ================= -->
+        <main id="page-home" class="page active">
+            <div id="home-screen">
+                <div class="hero-banner">
+                    <div class="hero-title hacker-font">🤖 NAIS HK Coding Week</div>
+                    <div class="hero-sub">On this app you will find information about coding week, important information, challenges, and games! Have a look around and see what you can discover!</div>
+                </div>
+
+                <!-- 1 Row of 6 Tiles -->
+                <div class="app-launcher-row">
+                    <div class="tile-small" onclick="openPage('schedule')">
+                        <div class="tile-icon">📅</div>
+                        <div class="tile-label">Calendar</div>
+                    </div>
+                    <div class="tile-small" onclick="openPage('years')">
+                        <div class="tile-icon">🏫</div>
+                        <div class="tile-label">Year Group</div>
+                    </div>
+                    <div class="tile-small" onclick="openPage('vocab')">
+                        <div class="tile-icon">📖</div>
+                        <div class="tile-label">Tech Words</div>
+                    </div>
+                    <div class="tile-small" onclick="openPage('history')">
+                        <div class="tile-icon">⏳</div>
+                        <div class="tile-label">History</div>
+                    </div>
+                    <div class="tile-small" onclick="openPage('languages')">
+                        <div class="tile-icon">💻</div>
+                        <div class="tile-label">Languages</div>
+                    </div>
+                    <div class="tile-small" onclick="openPage('challenges')">
+                        <div class="tile-icon">🎯</div>
+                        <div class="tile-label">Missions</div>
+                    </div>
+                </div>
+
+                <!-- Game Arcade Banner -->
+                <div class="game-banner" onclick="openPage('games')">
+                    <div>
+                        <div style="font-size: 1.3rem; font-weight: 800;" class="hacker-font">🎮 GAMES ARCADE</div>
+                        <div style="font-size: 0.9rem; color: #fff; opacity: 0.9;">Deliver House Points, decode pixels, and unlock the vault!</div>
+                    </div>
+                    <div style="font-size: 2.2rem;">🕹️</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= CALENDAR ================= -->
+        <main id="page-schedule" class="page">
+            <div class="nav-back-bar"><button class="btn-home" onclick="openPage('home')">🏠 Home</button></div>
+            <h2 class="hacker-font">📅 Coding Week Schedule</h2>
+            <div class="card">
+                <h3>Event Dates: September 14 – 20, 2026</h3>
+                <div class="data-panel">
+                    <b>Monday Sept 14:</b> Launch Assembly & What is an Algorithm?<br><br>
+                    <b>Tuesday Sept 15:</b> Debugging Day – Fix the Glitches!<br><br>
+                    <b>Wednesday Sept 16:</b> Loop Master Challenge<br><br>
+                    <b>Thursday Sept 17:</b> Variables & Game Mechanics<br><br>
+                    <b>Friday Sept 18:</b> NAIS HK Primary Coding Showcase!
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= YEAR GROUP ================= -->
+        <main id="page-years" class="page">
+            <div class="nav-back-bar"><button class="btn-home" onclick="openPage('home')">🏠 Home</button></div>
+            <h2 class="hacker-font">🏫 Year Group Focus Areas</h2>
+            <div class="card">
+                <h3>🐝 Year 1 & Year 2</h3>
+                <div class="data-panel">Understanding directional instructions, algorithm sequences, and story loops using Bee-Bots and ScratchJr.</div>
+            </div>
+            <div class="card">
+                <h3>🧩 Year 3 & Year 4</h3>
+                <div class="data-panel">Block coding, repetition loops, conditional logic (If/Then), and physical Micro:bit hardware interactions.</div>
+            </div>
+            <div class="card">
+                <h3>🚀 Year 5 & Year 6</h3>
+                <div class="data-panel">Variables, user inputs, functions, and text-based coding languages (Python and HTML/CSS).</div>
+            </div>
+        </main>
+
+        <!-- ================= TECH WORDS ================= -->
+        <main id="page-vocab" class="page">
+            <div class="nav-back-bar"><button class="btn-home" onclick="openPage('home')">🏠 Home</button></div>
+            <h2 class="hacker-font">📖 Tech Words Bank</h2>
+            
+            <div class="card">
+                <h3>⚡ Core Concepts</h3>
+                <div class="data-panel">
+                    <b>Algorithm</b><br>
+                    <u>Definition:</u> A finite sequence of mathematically rigorous instructions to solve a problem.<br>
+                    <u>In other words:</u> A step-by-step list of rules or instructions to finish a job. An example is like following a pancake recipe!
+                </div>
+                <div class="data-panel">
+                    <b>Bug & Debugging</b><br>
+                    <u>Definition:</u> A bug is an error in software. Debugging is the process of fixing it.<br>
+                    <u>In other words:</u> A bug is a mistake in your code. Debugging means playing detective to find and fix it!
+                </div>
+                <div class="data-panel">
+                    <b>Loop</b><br>
+                    <u>Definition:</u> A programming structure that repeats a sequence of instructions.<br>
+                    <u>In other words:</u> Doing the same thing over and over again without having to write the code twice!
+                </div>
+                <div class="data-panel">
+                    <b>Variable</b><br>
+                    <u>Definition:</u> A symbolic name associated with a value that can be changed.<br>
+                    <u>In other words:</u> A labeled memory box inside a program that holds information. An example is like a box labeled "Score" that updates when you get a coin!
+                </div>
+            </div>
+
+            <div class="card" style="background: var(--inset-dark); border-color: var(--accent-gold);">
+                <h3>✍️ Sentence Lab: Test your knowledge</h3>
+                <p style="margin-bottom: 15px; font-size: 0.9rem;">Select the correct tech word to complete each sentence:</p>
+                
+                <div class="sentence-row">
+                    1. When my game crashed, I searched for the 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Bug', 'tick1')">
+                        <option value="">--Select--</option><option value="Loop">Loop</option><option value="Bug">Bug</option><option value="Algorithm">Algorithm</option>
+                    </select>
+                    <span id="tick1" class="tick-mark">✅ Correct!</span>
+                </div>
+                
+                <div class="sentence-row">
+                    2. To save the high score, I stored the number inside a 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Variable', 'tick2')">
+                        <option value="">--Select--</option><option value="Variable">Variable</option><option value="Function">Function</option><option value="Bug">Bug</option>
+                    </select>
+                    <span id="tick2" class="tick-mark">✅ Correct!</span>
+                </div>
+
+                <div class="sentence-row">
+                    3. A step-by-step recipe to bake a cake is just like an 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Algorithm', 'tick3')">
+                        <option value="">--Select--</option><option value="Variable">Variable</option><option value="Algorithm">Algorithm</option><option value="Loop">Loop</option>
+                    </select>
+                    <span id="tick3" class="tick-mark">✅ Correct!</span>
+                </div>
+
+                <div class="sentence-row">
+                    4. To make my character run forever, I put the walking code inside a 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Loop', 'tick4')">
+                        <option value="">--Select--</option><option value="Loop">Loop</option><option value="Bug">Bug</option><option value="Algorithm">Algorithm</option>
+                    </select>
+                    <span id="tick4" class="tick-mark">✅ Correct!</span>
+                </div>
+
+                <div class="sentence-row">
+                    5. A saved block of code that I can call on to use again and again is a 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Function', 'tick5')">
+                        <option value="">--Select--</option><option value="Function">Function</option><option value="Variable">Variable</option><option value="Bug">Bug</option>
+                    </select>
+                    <span id="tick5" class="tick-mark">✅ Correct!</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= VERTICAL HISTORY TIMELINE ================= -->
+        <main id="page-history" class="page">
+            <div class="nav-back-bar"><button class="btn-home" onclick="openPage('home')">🏠 Home</button></div>
+            <h2 class="hacker-font">⏳ Tech History Timeline</h2>
+            <p style="text-align: center; font-size: 0.9rem; margin-bottom: 10px;">People in <span style="color:var(--accent-gold); font-weight:bold;">Gold</span> | World Events in <span style="color:var(--text-secondary); font-weight:bold;">Cyan</span></p>
+
+            <div class="timeline-container">
+                
+                <!-- Person -->
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-person">
+                        <div class="timeline-year">1843</div>
+                        <h3>👩‍💻 First Program</h3>
+                        <p><b>Ada Lovelace</b> writes the world's very first computer algorithm for a mechanical computer.</p>
+                    </div>
+                </div>
+
+                <!-- Event -->
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-event">
+                        <div class="timeline-year event-year">1927</div>
+                        <h3>📺 Television Invented</h3>
+                        <p><b>Philo Farnsworth</b> transmits the first electronic television picture.</p>
+                    </div>
+                </div>
+
+                <!-- Event -->
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-event">
+                        <div class="timeline-year event-year">1945</div>
+                        <h3>🖥️ First Giant Computer</h3>
+                        <p>The <b>ENIAC</b> is built. It was the first programmable general-purpose electronic digital computer, and it took up an entire room!</p>
+                    </div>
+                </div>
+
+                <!-- Person -->
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-person">
+                        <div class="timeline-year">1947</div>
+                        <h3>🐞 First Recorded Bug</h3>
+                        <p><b>Grace Hopper</b> finds a real moth trapped inside a computer and coins the term "debugging".</p>
+                    </div>
+                </div>
+
+                <!-- Person -->
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-person">
+                        <div class="timeline-year">1950</div>
+                        <h3>🧠 AI Foundations</h3>
+                        <p><b>Alan Turing</b> publishes a paper on computing machinery and intelligence, creating the famous "Turing Test".</p>
+                    </div>
+                </div>
+
+                <!-- Person -->
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-person">
+                        <div class="timeline-year">1969</div>
+                        <h3>🌕 Moon Landing Code</h3>
+                        <p><b>Margaret Hamilton</b> leads the software team. Her handwritten code safely lands Apollo 11 on the Moon!</p>
+                    </div>
+                </div>
+
+                <!-- Event -->
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-event">
+                        <div class="timeline-year event-year">1989</div>
+                        <h3>🌐 World Wide Web</h3>
+                        <p>Tim Berners-Lee invents the World Wide Web, creating the internet as we know it today using HTML.</p>
+                    </div>
+                </div>
+
+                <!-- Event -->
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-event">
+                        <div class="timeline-year event-year">2007</div>
+                        <h3>📱 iPhone Announced</h3>
+                        <p>Apple introduces the modern smartphone, putting powerful pocket computers in our hands.</p>
+                    </div>
+                </div>
+
+                <!-- Event -->
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-event">
+                        <div class="timeline-year event-year">2010</div>
+                        <h3>🖥️ iPad Released</h3>
+                        <p>Tablet computers become mainstream, changing how students learn and code in schools.</p>
+                    </div>
+                </div>
+
+                <!-- Present -->
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-event" style="border-color: var(--accent-green);">
+                        <div class="timeline-year" style="color: var(--accent-green);">2026</div>
+                        <h3>🤖 Present Day</h3>
+                        <p><b>YOU</b> are at NAIS HK learning to write code for future space rovers and AI!</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- ================= LANGUAGES ================= -->
+        <main id="page-languages" class="page">
+            <div class="nav-back-bar"><button class="btn-home" onclick="openPage('home')">🏠 Home</button></div>
+            <h2 class="hacker-font">💻 Real-World Languages</h2>
+            
+            <div class="card">
+                <h3>🔄 How Code Works: The Flow</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 10px;">Before you play a game, code goes on a journey:</p>
+                <div class="flowchart">
+                    <div class="flow-step">👨‍💻<br><b>1. Coder</b><br>Writes the code on a laptop.</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">☁️<br><b>2. Deployed</b><br>Saved to a web server.</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">📱<br><b>3. User</b><br>Downloads it to an iPad!</div>
+                </div>
+                <div class="data-panel" style="border-left: 4px solid var(--accent-gold);">
+                    <b>Did you know?</b> Most apps use <i>multiple types of code</i> at once! A website uses HTML for the words, CSS for the colours, and JavaScript to make buttons work.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🌐 HTML (HyperText Markup Language)</h3>
+                <div class="data-panel">
+                    <b>What it builds:</b> The structure of every single website on the internet, including this app!<br><br>
+                    <b>Example:</b> If you type this exact code into a file:<br>
+                    <code style="color:var(--accent-gold);">&lt;button&gt;Click Me!&lt;/button&gt;</code><br><br>
+                    <b>The output looks like this:</b><br>
+                    <button style="background:#fff; color:#000; padding:5px 10px; border-radius:4px; margin-top:5px;">Click Me!</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📱 Swift</h3>
+                <div class="data-panel">
+                    <b>What it builds:</b> Native apps for iPad, iPhone, and Apple Watch. It is the language that makes Apple devices tick!
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🚀 AGC Assembly</h3>
+                <div class="data-panel">
+                    <b>What it built:</b> The Apollo 11 Moon Lander guidance computer. It used only numbers and math commands.<br>
+                    <b>Fact:</b> It had only 4 kilobytes of RAM—a million times less memory than your iPad!
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🐍 Python</h3>
+                <div class="data-panel">
+                    <b>What it builds:</b> NASA Space Rover navigation, Artificial Intelligence, and Spotify's music engines.
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= MISSIONS ================= -->
+        <main id="page-challenges" class="page">
+            <div class="nav-back-bar"><button class="btn-home" onclick="openPage('home')">🏠 Home</button></div>
+            <h2 class="hacker-font">🎯 Year Group Missions</h2>
+            
+            <div class="card">
+                <h3>🐝 Year 1 & 2 Challenge</h3>
+                <div class="data-panel">Program your Bee-Bot to navigate around 3 obstacles on your class grid map without crashing!</div>
+            </div>
+            <div class="card">
+                <h3>🧩 Year 3 & 4 Challenge</h3>
+                <div class="data-panel">Build a Scratch game where your sprite collects points using a "Repeat 10 Times" loop and an "If Touch Star" condition.</div>
+            </div>
+            <div class="card">
+                <h3>🚀 Year 5 & 6 Challenge</h3>
+                <div class="data-panel">Write a program that uses a variable score tracker and a custom function to calculate your final score!</div>
+            </div>
+        </main>
+
+        <!-- ================= GAMES ARCADE MENU ================= -->
+        <main id="page-games" class="page">
+            <div class="nav-back-bar"><button class="btn-home" onclick="openPage('home')">🏠 Home</button></div>
+            <h2 class="hacker-font" style="text-align: center;">🕹️ GAMES ARCADE</h2>
+
+            <!-- ARCADE MAIN MENU -->
+            <div id="games-menu">
+                <button class="game-menu-btn" onclick="showGame('game-house')">
+                    <span>🏆 Deliver the House Point</span> <span>➔</span>
+                </button>
+                <button class="game-menu-btn" onclick="showGame('game-binary')">
+                    <span>⬛ Binary Pixel Decoder</span> <span>➔</span>
+                </button>
+                <button class="game-menu-btn" onclick="showGame('game-vault')">
+                    <span>🔒 The Secret Vault</span> <span>➔</span>
+                </button>
+            </div>
+
+            <!-- GAME 1: HOUSE POINTS -->
+            <div id="game-house" class="game-container">
+                <button class="btn-home" style="margin-bottom: 15px;" onclick="showGamesMenu()">🔙 Back to Arcade Menu</button>
+                <div class="card">
+                    <h3 class="hacker-font">🏆 Deliver the House Point</h3>
+                    <p style="font-size: 0.85rem; margin-bottom: 10px;">Use the arrows to code your robot from the middle past the grey obstacles to deliver points to a House Champion! (Max 5 points).</p>
+                    
+                    <div class="house-legend">
+                        <div class="legend-item base-yellow">Sandringham (Mr Moon) ☀️</div>
+                        <div class="legend-item base-green">Caernarfon (Mrs Martin) 🍃</div>
+                        <div class="legend-item base-red">Windsor (Mr Mertz) 🛡️</div>
+                        <div class="legend-item base-blue">Balmoral (Mr Padley) 🌊</div>
+                    </div>
+
+                    <div class="arena-container">
+                        <div id="game-grid"></div>
+                        <div class="control-pad">
+                            <div></div>
+                            <button class="pad-btn" onclick="movePlayer('up')">⬆️</button>
+                            <div></div>
+                            <button class="pad-btn" onclick="movePlayer('left')">⬅️</button>
+                            <div></div>
+                            <button class="pad-btn" onclick="movePlayer('right')">➡️</button>
+                            <div></div>
+                            <button class="pad-btn" onclick="movePlayer('down')">⬇️</button>
+                            <div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAME 2: BINARY DECODER -->
+            <div id="game-binary" class="game-container">
+                <button class="btn-home" style="margin-bottom: 15px;" onclick="showGamesMenu()">🔙 Back to Arcade Menu</button>
+                <div class="card">
+                    <h3 class="hacker-font">⬛ Binary Pixel Decoder</h3>
+                    <p style="font-size: 0.85rem;">Computers use 0s and 1s to draw pictures! When you scan a QR code, the camera is just reading a giant grid of black (1) and white (0) boxes.</p>
+                    
+                    <!-- Fixed Example -->
+                    <div class="data-panel" style="display:flex; align-items:center; justify-content:space-around; margin: 15px 0;">
+                        <div>
+                            <div style="font-size: 0.8rem; text-align:center;">Smiley Face Example</div>
+                            <div style="font-family:monospace; line-height: 1.1; background:#fff; color:#000; padding:5px;">
+                                ⬜⬛⬜⬛⬜<br>
+                                ⬜⬜⬜⬜⬜<br>
+                                ⬛⬜⬜⬜⬛<br>
+                                ⬜⬛⬛⬛⬜<br>
+                                ⬜⬜⬜⬜⬜
+                            </div>
+                        </div>
+                        <div style="font-family:monospace; color:var(--terminal-green); font-size:0.9rem;">
+                            01010<br>00000<br>10001<br>01110<br>00000
+                        </div>
+                    </div>
+
+                    <!-- Interactive Grid -->
+                    <p style="font-size: 0.85rem; text-align:center;"><b>Tap the squares below to draw your own shape and watch the live binary output change!</b></p>
+                    <div class="binary-wrap">
+                        <div id="binary-art" class="binary-grid"></div>
+                        <div style="text-align:center; font-weight:bold; color:var(--text-secondary);">Live Binary Output:</div>
+                        <div id="binary-output" class="binary-output-box">0000000000000000000000000</div>
+                        <button class="btn-home" onclick="clearBinary()">Reset Pixels</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAME 3: THE SECRET VAULT -->
+            <div id="game-vault" class="game-container">
+                <button class="btn-home" style="margin-bottom: 15px;" onclick="showGamesMenu()">🔙 Back to Arcade Menu</button>
+                <div class="card" style="border-color: var(--accent-gold);">
+                    <h3 class="hacker-font" style="color: var(--accent-gold) !important;">🔒 The Secret Vault</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px;">Answer these 3 questions based on the History and Language Labs to crack the code and unlock the vault!</p>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 0.85rem; font-weight: bold;">1. What exact year was the very first algorithm written by Ada Lovelace?</label>
+                        <input type="number" id="v1" class="vault-input" placeholder="e.g. 2000">
+                    </div>
+
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 0.85rem; font-weight: bold;">2. What is the last name of the person who found the first computer "bug"?</label>
+                        <input type="text" id="v2" class="vault-input" placeholder="e.g. Smith">
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 0.85rem; font-weight: bold;">3. What coding language builds native Apple iOS apps?</label>
+                        <input type="text" id="v3" class="vault-input" placeholder="e.g. Python">
+                    </div>
+
+                    <button class="vault-btn" onclick="checkVault()">Check Answers & Unlock</button>
+                    <div id="vault-msg" style="margin-top: 15px; font-weight: bold; min-height: 20px; text-align: center;"></div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <script>
+        // --- PAGE NAVIGATION ---
+        function openPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(`page-${pageId}`);
+            if (target) {
+                target.classList.add('active');
+            }
+            // Reset Games menu if opening games page
+            if(pageId === 'games') {
+                showGamesMenu();
+            }
+        }
+
+        // --- ARCADE SUB-MENU LOGIC ---
+        function showGamesMenu() {
+            document.getElementById('games-menu').style.display = 'flex';
+            document.querySelectorAll('.game-container').forEach(el => el.style.display = 'none');
+            
+            // Reset games state when going back to menu
+            resetHouseGame();
+            clearBinary();
+            document.getElementById('vault-msg').innerText = '';
+        }
+        function showGame(gameId) {
+            document.getElementById('games-menu').style.display = 'none';
+            document.getElementById(gameId).style.display = 'block';
+        }
+
+        // --- SENTENCE LAB ---
+        function checkSentence(selectElement, correctWord, tickId) {
+            const tick = document.getElementById(tickId);
+            if (selectElement.value === correctWord) {
+                tick.style.display = 'inline-block';
+                selectElement.style.borderColor = 'var(--accent-green)';
+            } else {
+                tick.style.display = 'none';
+                if(selectElement.value !== "") {
+                    selectElement.style.borderColor = 'var(--accent-red)';
+                } else {
+                    selectElement.style.borderColor = 'var(--text-secondary)';
+                }
+            }
+        }
+
+        // --- APP INIT ---
+        function initApp() {
+            initGrid();
+            initBinary();
+        }
+
+        /* 1. HOUSE GAME LOGIC */
+        const gridSize = 5;
+        let playerPos = { x: 2, y: 2 }; // Start in the absolute middle
+        const gridMap = [
+            [0, 0, 0, 0, 0],
+            [0, 1, 0, 1, 0],
+            [0, 0, 0, 0, 0],
+            [0, 1, 0, 1, 0],
+            [0, 0, 0, 0, 0]
+        ];
+        
+        // Defining the corner bases with their specific CSS color classes
+        const houseData = {
+            sandringham: { champion: "Mr Moon", x: 0, y: 0, points: 0, icon: "☀️", baseClass: "base-yellow" },
+            caernarfon: { champion: "Mrs Martin", x: 4, y: 0, points: 0, icon: "🍃", baseClass: "base-green" },
+            windsor: { champion: "Mr Mertz", x: 4, y: 4, points: 0, icon: "🛡️", baseClass: "base-red" },
+            balmoral: { champion: "Mr Padley", x: 0, y: 4, points: 0, icon: "🌊", baseClass: "base-blue" },
+        };
+
+        function initGrid() {
+            const gridEl = document.getElementById('game-grid');
+            if (!gridEl) return;
+            gridEl.innerHTML = '';
+            
+            // Build 5x5 grid
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'game-cell';
+                    cell.id = `cell-${x}-${y}`;
+                    
+                    if (gridMap[y][x] === 1) {
+                        cell.classList.add('cell-obstacle');
+                        cell.innerText = '🧱';
+                    }
+                    gridEl.appendChild(cell);
+                }
+            }
+            
+            // Apply House bases
+            Object.keys(houseData).forEach(key => {
+                const h = houseData[key];
+                const cell = document.getElementById(`cell-${h.x}-${h.y}`);
+                if (cell) {
+                    cell.classList.add(h.baseClass); // Apply vivid background color
+                    cell.innerText = h.icon;
+                    
+                    const marker = document.createElement('div');
+                    marker.className = 'house-marker';
+                    marker.id = `marker-${key}`;
+                    marker.innerText = '0';
+                    cell.appendChild(marker);
+                }
+            });
+            
+            // Create Player
+            const player = document.createElement('div');
+            player.id = 'player';
+            player.innerText = '🤖';
+            gridEl.appendChild(player);
+            
+            updatePlayerDOM();
+        }
+
+        function updatePlayerDOM() {
+            const player = document.getElementById('player');
+            const grid = document.getElementById('game-grid');
+            if (!player || !grid) return;
+            const step = grid.offsetWidth / gridSize;
+            player.style.left = `${playerPos.x * step}px`;
+            player.style.top = `${playerPos.y * step}px`;
+        }
+
+        function movePlayer(dir) {
+            let nextX = playerPos.x;
+            let nextY = playerPos.y;
+            
+            if (dir === 'up' && playerPos.y > 0) nextY--;
+            if (dir === 'down' && playerPos.y < gridSize - 1) nextY++;
+            if (dir === 'left' && playerPos.x > 0) nextX--;
+            if (dir === 'right' && playerPos.x < gridSize - 1) nextX++;
+            
+            if (gridMap[nextY][nextX] === 1) return; // Blocked by obstacle
+            
+            playerPos.x = nextX;
+            playerPos.y = nextY;
+            updatePlayerDOM();
+
+            // Check if landed on a house
+            Object.keys(houseData).forEach(key => {
+                const h = houseData[key];
+                if (playerPos.x === h.x && playerPos.y === h.y) {
+                    h.points++;
+                    document.getElementById(`marker-${key}`).innerText = h.points;
+                    
+                    if (h.points >= 5) {
+                        // Include champion name in alert
+                        alert(`That's too many house points for ${h.champion} to hold! Resetting to 0.`);
+                        h.points = 0;
+                        document.getElementById(`marker-${key}`).innerText = '0';
+                    }
+                    
+                    // Always reset to middle after dropping a point
+                    playerPos = { x: 2, y: 2 };
+                    setTimeout(updatePlayerDOM, 250);
+                }
+            });
+        }
+
+        function resetHouseGame() {
+            Object.keys(houseData).forEach(key => {
+                houseData[key].points = 0;
+                const m = document.getElementById(`marker-${key}`);
+                if (m) m.innerText = '0';
+            });
+            playerPos = { x: 2, y: 2 };
+            updatePlayerDOM();
+        }
+
+        /* 2. BINARY PIXEL DECODER (Live Output) */
+        function initBinary() {
+            const container = document.getElementById('binary-art');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            for(let i = 0; i < 25; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'binary-cell';
+                cell.innerText = '0';
+                
+                cell.onclick = function() {
+                    this.classList.toggle('on');
+                    this.innerText = this.classList.contains('on') ? '1' : '0';
+                    updateBinaryOutput();
+                };
+                
+                container.appendChild(cell);
+            }
+            updateBinaryOutput();
+        }
+
+        function updateBinaryOutput() {
+            const cells = document.querySelectorAll('#binary-art .binary-cell');
+            let binString = "";
+            cells.forEach(c => {
+                binString += c.classList.contains('on') ? '1' : '0';
+            });
+            
+            // Format string slightly for readability (insert space every 5 bits)
+            let formatted = binString.match(/.{1,5}/g).join(" ");
+            document.getElementById('binary-output').innerText = formatted;
+        }
+
+        function clearBinary() { 
+            initBinary(); 
+        }
+
+        /* 3. THE SECRET VAULT */
+        function checkVault() {
+            const a1 = document.getElementById('v1').value.trim().toLowerCase();
+            const a2 = document.getElementById('v2').value.trim().toLowerCase();
+            const a3 = document.getElementById('v3').value.trim().toLowerCase();
+            const msg = document.getElementById('vault-msg');
+
+            // Answers: 1843, Hopper (or Grace Hopper), Swift
+            const isQ1Correct = (a1 === '1843');
+            const isQ2Correct = (a2 === 'hopper' || a2 === 'grace hopper');
+            const isQ3Correct = (a3 === 'swift');
+
+            if(isQ1Correct && isQ2Correct && isQ3Correct) {
+                msg.innerHTML = "🎉 ACCESS GRANTED: You cracked the code! You are a NAIS HK Master Coder! 🏆";
+                msg.style.color = "var(--terminal-green)";
+            } else {
+                msg.innerHTML = "❌ ACCESS DENIED: One or more answers are incorrect. Check the History and Language Labs!";
+                msg.style.color = "var(--accent-red)";
+            }
+        }
+
+    </script>
+</body>
+</html>
