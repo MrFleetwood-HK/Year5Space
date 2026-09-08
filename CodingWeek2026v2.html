@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Coding Week 2026</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <style>
+        :root {
+            --bg-midnight: #0b3d91;
+            --card-slate: #105b70;
+            --inset-dark: #0d323d;
+            --terminal-bg: #0d1117;
+            --terminal-green: #00ff66;
+            --terminal-dim: #008833;
+            --text-main: #ffffff;
+            --text-secondary: #00d2d3;
+            --accent-gold: #f39c12;
+            --accent-green: #2ecc71;
+            --accent-red: #e74c3c;
+            
+            /* NAIS HK House Colours */
+            --house-sandringham: #f1c40f; 
+            --house-caernarfon: #2ecc71;  
+            --house-windsor: #e74c3c;      
+            --house-balmoral: #3498db;     
+
+            /* Rubik's & Mastermind Colours */
+            --rubik-w: #ffffff;
+            --rubik-r: #e74c3c;
+            --rubik-b: #3498db;
+            --rubik-g: #2ecc71;
+            --rubik-y: #f1c40f;
+            --rubik-o: #e67e22;
+
+            --pad: 1.2rem;
+            --r: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            background-color: var(--bg-midnight); color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 16px; overflow: hidden; height: 100vh; display: flex; flex-direction: column;
+        }
+
+        button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; font-weight: 600; }
+        #app { display: flex; flex-direction: column; flex: 1; overflow: hidden; position: relative; }
+
+        .hacker-font {
+            font-family: 'Courier New', Courier, monospace !important;
+            color: var(--terminal-green) !important;
+            text-shadow: 0 0 5px var(--terminal-dim); letter-spacing: 0.5px;
+        }
+
+        .page {
+            display: none; opacity: 0; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 20px; z-index: 10;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .page.active { display: block; opacity: 1; position: relative; }
+
+        h2 { margin-bottom: 15px; font-weight: 700; text-transform: uppercase; font-size: 1.4rem; }
+        h3 { color: var(--text-secondary); margin-bottom: 10px; font-weight: 700; font-size: 1.15rem; }
+
+        .card { background: var(--card-slate); padding: var(--pad); border-radius: var(--r); margin-bottom: 18px; border: 1px solid var(--inset-dark); }
+        .data-panel { background: var(--inset-dark); padding: 12px 15px; border-radius: 8px; font-size: 0.95rem; line-height: 1.4; margin-top: 8px; }
+
+        /* --- HOME SCREEN --- */
+        #home-screen { display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100%; padding: 10px; }
+        .hero-banner { text-align: center; margin-bottom: 25px; max-width: 700px; }
+        .school-logo { width: 150px; height: auto; margin: 0 auto 15px; display: block; }
+        .hero-title { font-size: 3.5rem; font-weight: 900; line-height: 1; margin-bottom: 5px; }
+        .hero-sub { font-size: 1.1rem; color: var(--text-main); line-height: 1.4; opacity: 0.95; margin-top: 15px; }
+
+        .typewriter-container {
+            display: inline-block; font-family: 'Courier New', monospace; font-size: 1.2rem;
+            color: var(--text-secondary); background: var(--inset-dark); padding: 5px 15px;
+            border-radius: 6px; margin-top: 10px;
+        }
+        .typewriter {
+            overflow: hidden; white-space: nowrap; margin: 0 auto;
+            border-right: .15em solid var(--accent-gold);
+            animation: typing 3.5s steps(30, end) infinite alternate, blink-caret .75s step-end infinite;
+        }
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: var(--accent-gold); } }
+
+        .app-launcher-row { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 12px; width: 100%; overflow-x: auto; padding: 10px 5px; }
+        .tile-small {
+            min-width: 110px; height: 110px; background: var(--card-slate); border-radius: var(--r);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 8px;
+            border-bottom: 4px solid var(--text-secondary); box-shadow: 0 4px 8px rgba(0,0,0,0.3); cursor: pointer; flex-shrink: 0;
+        }
+        .tile-small:active { transform: scale(0.95); background-color: #0b4e63; }
+        .tile-icon { font-size: 2.2rem; margin-bottom: 5px; }
+        .tile-label { font-size: 0.85rem; font-weight: 700; text-align: center; color: var(--text-main); }
+
+        .game-banner { background: var(--terminal-bg); margin-top: 25px; width: 100%; max-width: 720px; border-radius: var(--r); border: 2px solid var(--terminal-green); padding: 15px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; box-shadow: 0 0 10px rgba(0,255,102,0.2); }
+        .game-banner:active { transform: scale(0.98); }
+
+        .nav-back-bar { padding: calc(env(safe-area-inset-top) + 10px) 0 15px; display: flex; align-items: center; justify-content: space-between; }
+        .corner-logo { width: 35px; height: auto; }
+        .btn-home { background: var(--inset-dark); color: var(--accent-gold); padding: 8px 16px; border-radius: 8px; font-size: 1rem; border: 1px solid var(--accent-gold); display: flex; align-items: center; gap: 6px; }
+
+        /* --- TECH WORDS --- */
+        .vocab-panel { background: var(--inset-dark); padding: 15px; border-radius: 8px; font-size: 1rem; line-height: 1.8; margin-bottom: 15px; }
+        .sentence-row { margin-bottom: 15px; font-size: 0.95rem; line-height: 1.6; }
+        .sentence-select { background: var(--inset-dark); color: #fff; border: 2px solid var(--text-secondary); padding: 4px 8px; border-radius: 4px; font-size: 0.9rem; outline: none; font-weight: bold; }
+        .tick-mark { font-weight: bold; display: none; margin-left: 8px; }
+
+        /* --- VERTICAL HISTORY TIMELINE --- */
+        .timeline-container { position: relative; max-width: 800px; margin: 20px auto; padding: 10px 0; }
+        .timeline-container::after { content: ''; position: absolute; width: 4px; background-color: var(--inset-dark); top: 0; bottom: 0; left: 50%; margin-left: -2px; border-radius: 2px; }
+        .timeline-item { padding: 10px 30px; position: relative; background-color: inherit; width: 50%; }
+        .timeline-left { left: 0; } .timeline-right { left: 50%; }
+        .timeline-item::after { content: ''; position: absolute; width: 16px; height: 16px; background-color: white; top: 25px; border-radius: 50%; z-index: 1; }
+        .timeline-left::after { right: -8px; } .timeline-right::after { left: -8px; }
+        
+        .timeline-card { background: var(--card-slate); border-radius: var(--r); padding: 15px; position: relative; display: flex; flex-direction: column; }
+        .timeline-img { width: 100%; height: 180px; object-fit: contain; background: #000; border-radius: 6px; margin-bottom: 10px; }
+        .attribution { font-size: 0.65rem; color: #ccc; text-align: right; margin-top: -8px; margin-bottom: 8px; }
+        
+        .card-person { border: 2px solid var(--accent-gold); }
+        .timeline-left::after { border: 4px solid var(--accent-gold); }
+        .card-event { border: 2px solid var(--text-secondary); }
+        .timeline-right::after { border: 4px solid var(--text-secondary); }
+
+        .timeline-year { font-size: 1.4rem; font-weight: 800; color: var(--accent-gold); margin-bottom: 5px; }
+        .event-year { color: var(--text-secondary); }
+
+        @media screen and (max-width: 600px) {
+            .timeline-container::after { left: 20px; }
+            .timeline-item { width: 100%; padding-left: 50px; padding-right: 0; }
+            .timeline-right { left: 0; }
+            .timeline-left::after, .timeline-right::after { left: 12px; }
+        }
+
+        /* --- FLOWCHART --- */
+        .flowchart { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 15px; text-align: center; margin: 15px 0; overflow-x: auto; }
+        .flow-step { background: var(--inset-dark); border: 2px solid var(--accent-gold); padding: 10px; border-radius: 8px; flex: 1; min-width: 110px; }
+        .flow-arrow { font-size: 1.5rem; color: var(--accent-gold); }
+
+        /* ================= GAMES ARCADE STYLES ================= */
+        #games-menu { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px;}
+        .game-menu-btn { background: var(--inset-dark); border: 2px solid var(--terminal-green); color: var(--text-main); font-size: 1.2rem; font-weight: bold; padding: 15px 20px; border-radius: 12px; width: 100%; max-width: 400px; display: flex; justify-content: space-between; align-items: center; }
+        .game-menu-btn:active { background: var(--card-slate); }
+        .game-container { display: none; }
+
+        /* House Game */
+        .scoreboard {
+            display: flex; justify-content: space-around; background: var(--terminal-bg);
+            padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--card-slate);
+        }
+        .score-box { font-weight: bold; font-size: 1.1rem; padding: 5px 10px; border-radius: 4px; color: #000; text-align: center; }
+        .base-yellow { background-color: var(--house-sandringham) !important; color: #000; } 
+        .base-green { background-color: var(--house-caernarfon) !important; color: #000; } 
+        .base-red { background-color: var(--house-windsor) !important; color: #fff; } 
+        .base-blue { background-color: var(--house-balmoral) !important; color: #fff; }
+
+        .arena-container { display: flex; flex-direction: column; align-items: center; gap: 20px; margin-top: 10px; }
+        #game-grid { width: 320px; height: 320px; background: var(--inset-dark); border-radius: 12px; border: 3px solid #000; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(5, 1fr); gap: 2px; padding: 2px; position: relative; }
+        .game-cell { background-color: rgba(255, 255, 255, 0.1); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .cell-obstacle { background-color: #34495e !important; }
+        #player { width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; transition: all 0.15s ease-in-out; position: absolute; z-index: 10; }
+        
+        .control-row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+        .pad-btn { background: var(--inset-dark); border-radius: 8px; width: 60px; height: 50px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.2); }
+        .pad-btn:active { background: var(--text-secondary); color: #000; }
+
+        .flashing-warning { color: var(--accent-red); font-weight: bold; display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; }
+        .flash-dot { width: 10px; height: 10px; background: var(--accent-red); border-radius: 50%; animation: flash 1s infinite; }
+        @keyframes flash { 0% { opacity: 1; } 50% { opacity: 0.2; } 100% { opacity: 1; } }
+
+        /* Binary Game */
+        .binary-wrap { display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 15px 0;}
+        .binary-grid { display: grid; grid-template-columns: repeat(5, 40px); grid-template-rows: repeat(5, 40px); gap: 2px; justify-content: center; }
+        .binary-cell { background: #ffffff; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #ccc; font-weight: bold; cursor: pointer; border: 1px solid #999; }
+        .binary-cell.on { background: #000000; color: #333; }
+        .binary-output-box { background: var(--terminal-bg); color: var(--terminal-green); font-family: monospace; padding: 10px; border-radius: 8px; width: 100%; max-width: 280px; text-align: center; letter-spacing: 2px; font-size: 1.1rem; word-break: break-all; }
+
+        /* Rubik's Algorithm Game */
+        .rubik-container { display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; align-items: center; margin: 20px 0; }
+        .rubik-grid { display: grid; grid-template-columns: repeat(3, 60px); grid-template-rows: repeat(3, 60px); gap: 4px; background: #000; padding: 4px; border-radius: 8px; }
+        .rubik-cell { border-radius: 4px; background-color: var(--rubik-w); transition: transform 0.1s; }
+        .rubik-cell.interactive { cursor: pointer; }
+        .rubik-cell.interactive:active { transform: scale(0.9); }
+        .rubik-label { text-align: center; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
+
+        /* Mastermind Game */
+        .mm-row { display: flex; gap: 8px; justify-content: center; margin-bottom: 10px; align-items: center; flex-wrap: wrap; }
+        .mm-peg { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #000; cursor: pointer; }
+        .mm-result { font-weight: bold; font-size: 1.2rem; min-width: 30px; text-align: center; }
+
+        /* Secret Vault */
+        .vault-input, .vault-select { background: var(--inset-dark); border: 2px solid var(--text-secondary); color: #fff; font-size: 1rem; padding: 10px; width: 100%; border-radius: 8px; margin-bottom: 10px; outline: none; }
+        .vault-btn { background: var(--text-secondary); color: #000; padding: 12px 20px; font-size: 1.1rem; border-radius: 8px; width: 100%; }
+
+    </style>
+</head>
+<body onload="initApp()">
+
+    <div id="app">
+        <!-- ================= HOME SCREEN ================= -->
+        <main id="page-home" class="page active">
+            <div id="home-screen">
+                <div class="hero-banner">
+                    <img src="school-logo.png" alt="NAIS HK Logo" class="school-logo" onerror="this.style.display='none'">
+                    
+                    <div class="hero-title hacker-font">Coding Week 2026</div>
+                    
+                    <div class="typewriter-container">
+                        <div class="typewriter">&gt; console.log("Hello, World!");</div>
+                    </div>
+
+                    <div class="hero-sub">On this app you will find information about coding week, challenges, and games! Have a look around and see what you can discover!</div>
+                </div>
+
+                <div class="app-launcher-row">
+                    <div class="tile-small" onclick="openPage('about')"><div class="tile-icon">🌟</div><div class="tile-label">Coding Week 2026</div></div>
+                    <div class="tile-small" onclick="openPage('schedule')"><div class="tile-icon">📅</div><div class="tile-label">Calendar</div></div>
+                    <div class="tile-small" onclick="openPage('years')"><div class="tile-icon">🏫</div><div class="tile-label">Year Group</div></div>
+                    <div class="tile-small" onclick="openPage('vocab')"><div class="tile-icon">📖</div><div class="tile-label">Tech Words</div></div>
+                    <div class="tile-small" onclick="openPage('history')"><div class="tile-icon">⏳</div><div class="tile-label">History</div></div>
+                    <div class="tile-small" onclick="openPage('languages')"><div class="tile-icon">💻</div><div class="tile-label">Languages</div></div>
+                </div>
+
+                <div class="game-banner" onclick="openPage('games')">
+                    <div>
+                        <div style="font-size: 1.3rem; font-weight: 800;" class="hacker-font">🎮 GAMES ARCADE</div>
+                        <div style="font-size: 0.9rem; color: #fff; opacity: 0.9;">Deliver House Points, decode pixels, Mastermind, Rubik's & Vault!</div>
+                    </div>
+                    <div style="font-size: 2.2rem;">🕹️</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= CODING WEEK 2026 OVERVIEW ================= -->
+        <main id="page-about" class="page">
+            <div class="nav-back-bar">
+                <button class="btn-home" onclick="openPage('home')">🏠 Home</button>
+                <img src="school-logo.png" alt="Logo" class="corner-logo" onerror="this.style.display='none'">
+            </div>
+            <h2 class="hacker-font">🌟 Coding Week 2026 Overview</h2>
+            
+            <div class="card">
+                <h3>Who Takes Part?</h3>
+                <div class="data-panel">
+                    National Coding Week is built for everyone, regardless of age or background:<br><br>
+                    • <b>Complete Beginners:</b> Learners looking to understand digital terminology, conquer tech anxiety, or pick up a new hobby.<br>
+                    • <b>Students & Children:</b> Young learners getting a fun, hands-on introduction to logic, problem-solving, and creation through tech.<br>
+                    • <b>Schools & Libraries:</b> Local hubs that host free, accessible coding taster sessions and workshops.<br>
+                    • <b>Tech Professionals & Businesses:</b> Developers, engineers, and companies who volunteer their time to mentor others and bridge the digital divide.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Why Do We Take Part?</h3>
+                <div class="data-panel">
+                    • <b>Bridging the Skills Gap:</b> Digital literacy is no longer optional. The week helps people stay relevant in an increasingly automated world.<br><br>
+                    • <b>Building Confidence:</b> By breaking coding down into small, manageable milestones, it shows beginners that tech is a tool they can control.<br><br>
+                    • <b>Fostering Critical Thinking:</b> Learning to code teaches computational thinking—how to break complex problems down into small, logical steps.<br><br>
+                    • <b>Economic Empowerment:</b> Demystifying tech opens new career doors for underrepresented groups and career-changers.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>Future Careers: What Jobs Can You Do With Coding?</h3>
+                <div class="data-panel">
+                    Coding is the baseline language for the fastest-growing industries in the global economy. Learning to code opens up diverse career paths, including:<br><br>
+                    <b>Artificial Intelligence & Data</b><br>
+                    • <b>AI/Machine Learning Engineer:</b> Designing algorithms that allow computers to learn, reason, and make decisions autonomously.<br>
+                    • <b>Data Scientist:</b> Analysing massive datasets to uncover hidden patterns and help industries make strategic decisions.<br><br>
+                    <b>Development & Design</b><br>
+                    • <b>Software/Full-Stack Developer:</b> Building the infrastructure, applications, and operating systems we use every day on mobile and desktop.<br>
+                    • <b>UX/UI Developer:</b> Coding the visual and interactive elements of software to ensure user journeys are seamless and intuitive.<br>
+                    • <b>Game Developer:</b> Combining storytelling, physics engines, and graphics coding to build immersive video games.<br><br>
+                    <b>Security & Infrastructure</b><br>
+                    • <b>Cybersecurity Analyst:</b> Writing code to simulate cyberattacks, find network vulnerabilities, and protect sensitive data from hackers.<br>
+                    • <b>Cloud Architect:</b> Designing and managing scalable, secure digital environments for businesses using platforms like AWS or Azure.<br><br>
+                    <b>Specialized & Emerging Fields</b><br>
+                    • <b>Bioinformatics Scientist:</b> Using code to analyse complex biological data, model viruses, or map genetic codes for medical research.<br>
+                    • <b>Automation Consultant:</b> Writing scripts to eliminate repetitive, manual tasks for businesses, maximizing efficiency across diverse industries.
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= CALENDAR ================= -->
+        <main id="page-schedule" class="page">
+            <div class="nav-back-bar">
+                <button class="btn-home" onclick="openPage('home')">🏠 Home</button>
+                <img src="school-logo.png" alt="Logo" class="corner-logo" onerror="this.style.display='none'">
+            </div>
+            <h2 class="hacker-font">📅 Coding Week Schedule</h2>
+            <div class="card">
+                <h3>Monday 14th – Friday 18th September 2026</h3>
+                <div class="data-panel">
+                    <b>Monday 14th September</b><br>
+                    • <b>2:00 PM:</b> Whole School Launch Assembly – Official Kick-off for Coding Week! 🚀<br><br>
+
+                    <b>Tuesday 15th September</b><br>
+                    • <i>Ask your teacher what exciting coding activities you'll be doing today!</i> 💻<br><br>
+
+                    <b>Wednesday 16th September</b><br>
+                    • <i>Ask your teacher what exciting coding activities you'll be doing today!</i> 💻<br><br>
+
+                    <b>Thursday 17th September</b><br>
+                    • <b>8:00 AM:</b> Year 2 Live Coding Challenge 🐝<br>
+                    • <b>10:00 AM – 11:00 AM:</b> Classes 4A, 4B, and 4C Live Coding Challenge 🧩<br>
+                    • <b>10:00 AM – 11:00 AM:</b> Classes 6B, 6D, and 6E Live Coding Challenge 🚀<br>
+                    • <b>12:00 PM – 1:00 PM:</b> Classes 5D, 5E, and 5G Live Coding Challenge 🚀<br>
+                    • <b>12:00 PM – 1:00 PM:</b> Classes 6A, 6C, and 6F Live Coding Challenge 🚀<br><br>
+
+                    <b>Friday 18th September</b><br>
+                    • <b>8:00 AM – 9:00 AM:</b> Class 4E Assembly 🎭 <i>(Will Class 4E and Ms Cochrane have a coding-related assembly!?)</i><br>
+                    • <b>9:00 AM – 10:00 AM:</b> Classes 1A and 1B Live Coding Challenge 🐝<br>
+                    • <b>10:00 AM – 11:00 AM:</b> Classes 5A, 5B, 5C, and 5F Live Coding Challenge 🚀<br>
+                    • <b>11:00 AM – 12:00 PM:</b> Classes 4D, 4E, and 4F Live Coding Challenge 🧩<br>
+                    • <b>1:00 PM – 2:00 PM:</b> Classes 3A, 3B, 3D, and 3E Live Coding Challenge 🧩
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= YEAR GROUP ================= -->
+        <main id="page-years" class="page">
+            <div class="nav-back-bar">
+                <button class="btn-home" onclick="openPage('home')">🏠 Home</button>
+                <img src="school-logo.png" alt="Logo" class="corner-logo" onerror="this.style.display='none'">
+            </div>
+            <h2 class="hacker-font">🏫 Year Group Focus Areas</h2>
+            
+            <div class="card" style="border-color: var(--accent-gold);">
+                <h3>🏆 Interhouse Competition Overview</h3>
+                <div class="data-panel">
+                    This year's Coding Week is a full <b>Interhouse Competition</b>! Throughout the week, your teachers will award house points directly into a live tracker during your coding lessons. Year 1 through Year 6 will all be competing for their houses—Sandringham ☀️, Caernarfon 🍃, Windsor 🛡️, and Balmoral 🌊!<br><br>
+                    At the end of each day, we will reveal the updated point tallies to see who is in the lead. You will also join your entire year group for a high-energy <b>Live Interhouse Quiz Competition</b>, working in house teams to tackle coding languages, pattern challenges, maze routes, and debugging puzzles to earn huge points for your house!
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🐝 Year 1 & Year 2</h3>
+                <div class="data-panel">
+                    Get ready to become master navigators! 🧭 You will learn to guide characters through tricky mazes, spot hidden position patterns, and master directional coding algorithms. We will also discover the inspiring story of <b>Margaret Hamilton</b> 🚀 and how her code safely landed astronauts on the Moon! Finally, you'll team up with your housemates in a fast-paced <b>Live House Competition</b> to solve grid puzzles, decode patterns, and score points for your team!<br><br>
+                    Can 1A, 1B, 2A, 2B, 2C, and 2D take their house to victory?! 🌟
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🧩 Year 3 & Year 4</h3>
+                <div class="data-panel">
+                    Step into the world of creative game mechanics! 🎮 You will use <b>Scratch</b> block coding to program interactive stories, custom sprites, and conditional logic rules. We will travel back in time to explore <b>Ada Lovelace</b> 👩‍💻, the world’s very first computer programmer! Then, put your knowledge to the test in an electrifying <b>Live Interhouse Challenge</b>, answering rapid-fire questions on debugging, logic loops, and coding history to boost your house tally!
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🚀 Year 5 & Year 6</h3>
+                <div class="data-panel">
+                    Build real-world software on <b>BSD Online</b>! 💻 You will write authentic text-based code using <b>HTML, CSS, and JavaScript</b> to design interactive digital projects. We will investigate the pioneering legacy of <b>Ada Lovelace</b> 📜 and see how early algorithms shaped modern technology. To top it off, you will represent your house in a strategic <b>Live Interhouse Showdown</b>, competing head-to-head on complex code debugging, syntax challenges, and pattern algorithms!
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= TECH WORDS ================= -->
+        <main id="page-vocab" class="page">
+            <div class="nav-back-bar">
+                <button class="btn-home" onclick="openPage('home')">🏠 Home</button>
+                <img src="school-logo.png" alt="Logo" class="corner-logo" onerror="this.style.display='none'">
+            </div>
+            <h2 class="hacker-font">📖 Tech Words Bank</h2>
+            
+            <div class="card">
+                <h3>⚡ Core Concepts</h3>
+                <div class="vocab-panel"><b>Algorithm</b><br><b>Definition:</b> A finite sequence of mathematically rigorous instructions to solve a problem.</div>
+                <div class="vocab-panel"><b>Bug & Debugging</b><br><b>Definition:</b> A bug is an error in software. Debugging is the process of fixing it.</div>
+                <div class="vocab-panel"><b>Function</b><br><b>Definition:</b> A reusable block of code that performs a specific, defined task.</div>
+                <div class="vocab-panel"><b>Input</b><br><b>Definition:</b> Data or signals sent into a computer system (like typing on a keyboard or tapping a screen).</div>
+                <div class="vocab-panel"><b>Logical Reasoning</b><br><b>Definition:</b> The process of using a rational, systematic series of steps to evaluate a problem or situation.</div>
+                <div class="vocab-panel"><b>Loop</b><br><b>Definition:</b> A programming structure that repeats a sequence of instructions.</div>
+                <div class="vocab-panel"><b>Output</b><br><b>Definition:</b> Information or action produced by a computer system (like text on a screen or sound from a speaker).</div>
+                <div class="vocab-panel"><b>Sequencing</b><br><b>Definition:</b> Putting instructions, events, or actions into the correct logical order.</div>
+                <div class="vocab-panel"><b>Variable</b><br><b>Definition:</b> A symbolic name associated with a value that can be changed.</div>
+            </div>
+
+            <div class="card" style="background: var(--inset-dark); border-color: var(--accent-gold);">
+                <h3>✍️ Sentence Lab: Test your knowledge</h3>
+                <p style="margin-bottom: 15px; font-size: 0.9rem;">Select the correct tech word to complete each sentence:</p>
+                
+                <div class="sentence-row">
+                    1. When my game crashed, I searched for the 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Bug', 'tick1')">
+                        <option value="">--Select--</option><option value="Loop">Loop</option><option value="Bug">Bug</option><option value="Algorithm">Algorithm</option>
+                    </select>
+                    <span id="tick1" class="tick-mark"></span>
+                </div>
+                
+                <div class="sentence-row">
+                    2. To save the high score, I stored the number inside a 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Variable', 'tick2')">
+                        <option value="">--Select--</option><option value="Variable">Variable</option><option value="Function">Function</option><option value="Bug">Bug</option>
+                    </select>
+                    <span id="tick2" class="tick-mark"></span>
+                </div>
+
+                <div class="sentence-row">
+                    3. A step-by-step recipe to bake a cake is just like an 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Algorithm', 'tick3')">
+                        <option value="">--Select--</option><option value="Variable">Variable</option><option value="Algorithm">Algorithm</option><option value="Loop">Loop</option>
+                    </select>
+                    <span id="tick3" class="tick-mark"></span>
+                </div>
+
+                <div class="sentence-row">
+                    4. To make my character run forever, I put the walking code inside a 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Loop', 'tick4')">
+                        <option value="">--Select--</option><option value="Loop">Loop</option><option value="Bug">Bug</option><option value="Algorithm">Algorithm</option>
+                    </select>
+                    <span id="tick4" class="tick-mark"></span>
+                </div>
+
+                <div class="sentence-row">
+                    5. A saved block of code that I can call on to use again and again is a 
+                    <select class="sentence-select" onchange="checkSentence(this, 'Function', 'tick5')">
+                        <option value="">--Select--</option><option value="Function">Function</option><option value="Variable">Variable</option><option value="Bug">Bug</option>
+                    </select>
+                    <span id="tick5" class="tick-mark"></span>
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= VERTICAL HISTORY TIMELINE ================= -->
+        <main id="page-history" class="page">
+            <div class="nav-back-bar">
+                <button class="btn-home" onclick="openPage('home')">🏠 Home</button>
+                <img src="school-logo.png" alt="Logo" class="corner-logo" onerror="this.style.display='none'">
+            </div>
+            <h2 class="hacker-font">⏳ Tech History Timeline</h2>
+            <p style="font-size: 0.9rem; margin-bottom: 20px;">Scroll top to bottom to travel through time! People are outlined in <span style="color:var(--accent-gold); font-weight:bold;">Gold</span> and World Events in <span style="color:var(--text-secondary); font-weight:bold;">Cyan</span>.</p>
+
+            <div class="timeline-container">
+                
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-person">
+                        <img class="timeline-img" src="ada-lovelace.png" alt="Ada Lovelace">
+                        <div class="attribution">Ada Lovelace</div>
+                        <div class="timeline-year">1843</div>
+                        <h3>👩‍💻 First Program</h3>
+                        <p><b>Ada Lovelace</b> writes the world's very first computer algorithm for Charles Babbage's mechanical "Analytical Engine" computer.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-event">
+                        <img class="timeline-img" src="philo-farnsworth.png" alt="Philo Farnsworth">
+                        <div class="attribution">Philo Farnsworth</div>
+                        <div class="timeline-year event-year">1927</div>
+                        <h3>📺 Television</h3>
+                        <p><b>Philo Farnsworth</b> transmits the first fully electronic television picture, laying the foundation for modern display screens.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-event">
+                        <img class="timeline-img" src="eniac.png" alt="ENIAC Computer">
+                        <div class="attribution">ENIAC Computer</div>
+                        <div class="timeline-year event-year">1945</div>
+                        <h3>🖥️ The First Giant Computer</h3>
+                        <p>The <b>ENIAC</b> is completed as the first room-sized programmable electronic general-purpose digital computer.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-person">
+                        <img class="timeline-img" src="grace-hopper.png" alt="Grace Hopper">
+                        <div class="attribution">Grace Hopper</div>
+                        <div class="timeline-year">1947</div>
+                        <h3>🐞 First Bug</h3>
+                        <p><b>Grace Hopper</b> finds a physical moth inside the Harvard Mark II computer, coining the term "debugging".</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-person">
+                        <img class="timeline-img" src="alan-turing.png" alt="Alan Turing">
+                        <div class="attribution">Alan Turing</div>
+                        <div class="timeline-year">1950</div>
+                        <h3>🧠 AI Foundations</h3>
+                        <p><b>Alan Turing</b> publishes his work on machine intelligence and introduces the famous "Turing Test".</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-person">
+                        <img class="timeline-img" src="margaret-hamilton.png" alt="Margaret Hamilton">
+                        <div class="attribution">Margaret Hamilton</div>
+                        <div class="timeline-year">1969</div>
+                        <h3>🌕 Moon Landing Code</h3>
+                        <p><b>Margaret Hamilton</b> writes the flight software that prevents a computer overload during Apollo 11's Moon landing.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-event">
+                        <img class="timeline-img" src="tim-berners-lee.png" alt="Tim Berners-Lee">
+                        <div class="attribution">Tim Berners-Lee</div>
+                        <div class="timeline-year event-year">1989</div>
+                        <h3>🌐 World Wide Web</h3>
+                        <p><b>Tim Berners-Lee</b> invents the World Wide Web, HTML, and HTTP while working at CERN.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-event">
+                        <img class="timeline-img" src="iphone.png" alt="Original iPhone">
+                        <div class="attribution">Apple iPhone</div>
+                        <div class="timeline-year event-year">2007</div>
+                        <h3>📱 iPhone Announced</h3>
+                        <p>Apple introduces the touchscreen smartphone, changing how apps and mobile code are designed.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-left">
+                    <div class="timeline-card card-event">
+                        <img class="timeline-img" src="ipad.png" alt="First iPad">
+                        <div class="attribution">Apple iPad</div>
+                        <div class="timeline-year event-year">2010</div>
+                        <h3>🖥️ iPad Released</h3>
+                        <p>The launch of the iPad brings multi-touch tablet learning directly into modern classrooms.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item timeline-right">
+                    <div class="timeline-card card-event" style="border-color: var(--accent-green);">
+                        <img class="timeline-img" src="present-day.png" alt="Present Day">
+                        <div class="attribution">NAIS HK Coding</div>
+                        <div class="timeline-year" style="color: var(--accent-green);">2026</div>
+                        <h3>🤖 Present Day</h3>
+                        <p><b>YOU</b> are coding at NAIS HK during Coding Week 2026!</p>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- ================= LANGUAGES ================= -->
+        <main id="page-languages" class="page">
+            <div class="nav-back-bar">
+                <button class="btn-home" onclick="openPage('home')">🏠 Home</button>
+                <img src="school-logo.png" alt="Logo" class="corner-logo" onerror="this.style.display='none'">
+            </div>
+            <h2 class="hacker-font">💻 Real-World Languages</h2>
+            
+            <div class="card">
+                <h3>🔄 How Code Works: The Flow</h3>
+                <div class="flowchart">
+                    <div class="flow-step">👨‍💻<br><b>1. Coder</b><br>Writes the code.</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">☁️<br><b>2. Deployed</b><br>Saved to a server.</div>
+                    <div class="flow-arrow">➔</div>
+                    <div class="flow-step">📱<br><b>3. User</b><br>Plays it on a device!</div>
+                </div>
+                <div class="data-panel" style="border-left: 4px solid var(--accent-gold);">
+                    <b>Example:</b> Mr Fleetwood wrote this code in HTML – he saved it online to the internet – an iPad shortcut is made on your iPad so you can access it!
+                </div>
+                <div class="data-panel" style="margin-top: 10px; border-left: 4px solid var(--text-secondary);">
+                    <b>Did you know?</b> Most apps use multiple types of code at once! A website uses HTML for the words, CSS for the colours, and JavaScript to make buttons work.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🌐 JavaScript (JS) & HTML</h3>
+                <div class="data-panel">
+                    <b>What they build:</b> The entire Internet! JavaScript is the programming language of the Web.<br><br>
+                    <b>Why it matters:</b> When you build web pages in <b>BSD Online</b> on your iPads, you are writing real HTML and JavaScript! HTML creates the building blocks (like images and paragraphs), while JavaScript adds the interactive logic (like making a game score go up).
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>🐍 Python</h3>
+                <div class="data-panel">
+                    <b>What it builds:</b> NASA Space Rover navigation algorithms, advanced Artificial Intelligence (like ChatGPT), and massive data engines for companies like Spotify and Netflix.<br><br>
+                    <b>Fact:</b> It is named after the British comedy group Monty Python, not the snake! It is loved by programmers because its text is incredibly clean and easy to read.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📱 Swift</h3>
+                <div class="data-panel">
+                    <b>What it builds:</b> Native apps specifically for iPad, iPhone, and Apple Watch.<br><br>
+                    <b>Why it's awesome:</b> Swift is incredibly fast and includes special tools built right in for programming Augmented Reality (AR) and 3D graphics on Apple devices.
+                </div>
+            </div>
+        </main>
+
+        <!-- ================= GAMES ARCADE MENU ================= -->
+        <main id="page-games" class="page">
+            <div class="nav-back-bar">
+                <button class="btn-home" onclick="openPage('home')">🏠 Home</button>
+                <img src="school-logo.png" alt="Logo" class="corner-logo" onerror="this.style.display='none'">
+            </div>
+            <h2 class="hacker-font" style="text-align: center;">🕹️ GAMES ARCADE</h2>
+
+            <div id="games-menu">
+                <button class="game-menu-btn" onclick="showGame('game-house')"><span>🏆 Deliver the House Point</span> <span>➔</span></button>
+                <button class="game-menu-btn" onclick="showGame('game-binary')"><span>⬛ Binary Pixel Decoder</span> <span>➔</span></button>
+                <button class="game-menu-btn" onclick="showGame('game-rubik')"><span>🧩 Rubik's Colour Algorithm</span> <span>➔</span></button>
+                <button class="game-menu-btn" onclick="showGame('game-mastermind')"><span>🕵️ House Mastermind</span> <span>➔</span></button>
+                <button class="game-menu-btn" onclick="showGame('game-vault')"><span>🔒 The Secret Vault</span> <span>➔</span></button>
+            </div>
+
+            <!-- GAME 1: HOUSE POINTS -->
+            <div id="game-house" class="game-container">
+                <button class="btn-home" style="margin-bottom: 15px;" onclick="showGamesMenu()">🔙 Back to Arcade Menu</button>
+                <div class="card">
+                    <h3 class="hacker-font">🏆 Deliver the House Point</h3>
+                    <p style="font-size: 0.85rem; margin-bottom: 5px;">Use the arrows to code your robot from the middle past the grey obstacles to deliver points to a House Champion!</p>
+                    <div class="flashing-warning"><span class="flash-dot"></span> Max 5 points — do not try and take more than 5 house points.</div>
+                    
+                    <div class="scoreboard" style="margin-top:10px;">
+                        <div class="score-box base-yellow">Mr Moon<br><span id="score-sandringham">0</span></div>
+                        <div class="score-box base-green">Mrs Martin<br><span id="score-caernarfon">0</span></div>
+                        <div class="score-box base-red">Mr Mertz<br><span id="score-windsor">0</span></div>
+                        <div class="score-box base-blue">Mr Padley<br><span id="score-balmoral">0</span></div>
+                    </div>
+
+                    <div class="arena-container">
+                        <div id="game-grid"></div>
+                        <div class="control-row">
+                            <button class="pad-btn" onclick="movePlayer('left')">⬅️</button>
+                            <button class="pad-btn" onclick="movePlayer('up')">⬆️</button>
+                            <button class="pad-btn" onclick="movePlayer('down')">⬇️</button>
+                            <button class="pad-btn" onclick="movePlayer('right')">➡️</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAME 2: BINARY DECODER -->
+            <div id="game-binary" class="game-container">
+                <button class="btn-home" style="margin-bottom: 15px;" onclick="showGamesMenu()">🔙 Back to Arcade Menu</button>
+                <div class="card">
+                    <h3 class="hacker-font">⬛ Binary Pixel Decoder</h3>
+                    <p style="font-size: 0.85rem;">Computers use 0s and 1s to draw pictures! When you scan a QR code, the camera is just reading a giant grid of black (1) and white (0) boxes.</p>
+                    
+                    <div class="data-panel" style="display:flex; align-items:center; justify-content:space-around; margin: 15px 0;">
+                        <div>
+                            <div style="font-size: 0.8rem; text-align:center;">Smiley Face Example</div>
+                            <div style="font-family:monospace; line-height: 1.1; background:#fff; color:#000; padding:5px;">
+                                ⬜⬛⬜⬛⬜<br>⬜⬜⬜⬜⬜<br>⬛⬜⬜⬜⬛<br>⬜⬛⬛⬛⬜<br>⬜⬜⬜⬜⬜
+                            </div>
+                        </div>
+                        <div style="font-family:monospace; color:var(--terminal-green); font-size:0.9rem;">
+                            01010<br>00000<br>10001<br>01110<br>00000
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.85rem; text-align:center;"><b>Tap the squares below to draw your own shape and watch the live binary output change!</b></p>
+                    <div class="binary-wrap">
+                        <div id="binary-art" class="binary-grid"></div>
+                        <div style="text-align:center; font-weight:bold; color:var(--text-secondary);">Live Binary Output:</div>
+                        <div id="binary-output" class="binary-output-box">0000000000000000000000000</div>
+                        <button class="btn-home" onclick="clearBinary()">Reset Pixels</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GAME 3: RUBIK'S PUZZLE -->
+            <div id="game-rubik" class="game-container">
+                <button class="btn-home" style="margin-bottom: 15px;" onclick="showGamesMenu()">🔙 Back to Arcade Menu</button>
+                <div class="card">
+                    <h3 class="hacker-font">🧩 Rubik's Colour Algorithm Match</h3>
+                    <p style="font-size: 0.85rem; text-align: center; margin-bottom: 5px;">Tap the squares in your grid to cycle through the colours. Match the blank grid to the target 3x3 pattern!</p>
+                    
+                    <div class="rubik-container">
+                        <div>
+                            <div class="rubik-label" style="color: var(--accent-gold);">Target Pattern</div>
+                            <div class="rubik-grid" id="rubik-target-display"></div>
+                        </div>
+                        <div>
+                            <div class="rubik-label" style="color: var(--text-secondary);">Your Grid</div>
+                            <div class="rubik-grid" id="rubik-grid"></div>
+                        </div>
+                    </div>
+
+                    <div id="rubik-msg" style="text-align: center; font-weight: bold; font-size: 1.3rem; min-height: 30px; margin-top: 10px;"></div>
+                    <div style="text-align: center;"><button class="btn-home" style="display:inline-block;" onclick="initRubik()">New Pattern</button></div>
+                </div>
+            </div>
+
+            <!-- GAME 4: HOUSE MASTERMIND -->
+            <div id="game-mastermind" class="game-container">
+                <button class="btn-home" style="margin-bottom: 15px;" onclick="showGamesMenu()">🔙 Back to Arcade Menu</button>
+                <div class="card">
+                    <h3 class="hacker-font">🕵️ House Mastermind</h3>
+                    <p style="font-size: 0.85rem; margin-bottom: 15px;">Crack the secret house colour code! Tap the circles to change colours, then hit Guess. (Colours: Yellow, Green, Red, Blue)</p>
+                    
+                    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; margin-bottom: 15px;">
+                        <button class="vault-btn" style="width: auto; padding: 6px 10px;" onclick="setMMMode('easy')">Easy (2)</button>
+                        <button class="vault-btn" style="width: auto; padding: 6px 10px;" onclick="setMMMode('medium')">Medium (4)</button>
+                        <button class="vault-btn" style="width: auto; padding: 6px 10px;" onclick="setMMMode('hard')">Hard (8)</button>
+                        <button class="vault-btn" style="width: auto; padding: 6px 10px;" onclick="setMMMode('extreme')">Extreme (12)</button>
+                    </div>
+
+                    <div id="mm-board" style="display: flex; flex-direction: column; align-items: center; gap: 10px;"></div>
+                    <div style="text-align: center; margin-top: 15px;">
+                        <button class="vault-btn" style="width: auto;" onclick="submitMMGuess()">Submit Guess</button>
+                    </div>
+                    <div id="mm-msg" style="text-align: center; font-weight: bold; font-size: 1.2rem; min-height: 30px; margin-top: 10px;"></div>
+                </div>
+            </div>
+
+            <!-- GAME 5: THE SECRET VAULT -->
+            <div id="game-vault" class="game-container">
+                <button class="btn-home" style="margin-bottom: 15px;" onclick="showGamesMenu()">🔙 Back to Arcade Menu</button>
+                <div class="card" style="border-color: var(--accent-gold);">
+                    <h3 class="hacker-font" style="color: var(--accent-gold) !important;">🔒 The Secret Vault</h3>
+                    <p style="font-size: 0.9rem; margin-bottom: 15px;">Answer these 5 questions based on the History and Language Labs to crack the code!</p>
+                    
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 0.85rem; font-weight: bold;">1. What exact year was the very first algorithm written by Ada Lovelace?</label>
+                        <input type="number" id="v1" class="vault-input" placeholder="e.g. 2000">
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="font-size: 0.85rem; font-weight: bold;">2. What is the last name of the person who found the first computer "bug"?</label>
+                        <input type="text" id="v2" class="vault-input" placeholder="e.g. Smith">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 0.85rem; font-weight: bold;">3. What coding language builds native Apple iOS apps?</label>
+                        <input type="text" id="v3" class="vault-input" placeholder="e.g. Python">
+                    </div>
+                    
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 0.85rem; font-weight: bold;">4. (Easy) What language is used in BSD Online to make web interactivity?</label>
+                        <select id="v4" class="vault-select">
+                            <option value="">--Select Answer--</option>
+                            <option value="Swift">Swift</option>
+                            <option value="AGC Assembly">AGC Assembly</option>
+                            <option value="JavaScript">JavaScript</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-size: 0.85rem; font-weight: bold;">5. (Tricky) Who invented the World Wide Web in 1989?</label>
+                        <select id="v5" class="vault-select">
+                            <option value="">--Select Answer--</option>
+                            <option value="Alan Turing">Alan Turing</option>
+                            <option value="Tim Berners-Lee">Tim Berners-Lee</option>
+                            <option value="Margaret Hamilton">Margaret Hamilton</option>
+                        </select>
+                    </div>
+
+                    <button class="vault-btn" onclick="checkVault()">Check Answers & Unlock</button>
+                    <div id="vault-msg" style="margin-top: 15px; font-weight: bold; min-height: 20px; text-align: center;"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        function openPage(pageId) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(`page-${pageId}`);
+            if (target) target.classList.add('active');
+            if(pageId === 'games') showGamesMenu();
+        }
+
+        function showGamesMenu() {
+            document.getElementById('games-menu').style.display = 'flex';
+            document.querySelectorAll('.game-container').forEach(el => el.style.display = 'none');
+            resetHouseGame(); clearBinary(); document.getElementById('vault-msg').innerText = '';
+        }
+        
+        function showGame(gameId) {
+            document.getElementById('games-menu').style.display = 'none';
+            document.querySelectorAll('.game-container').forEach(el => el.style.display = 'none');
+            document.getElementById(gameId).style.display = 'block';
+            if(gameId === 'game-house') initGrid();
+            if(gameId === 'game-binary') initBinary();
+            if(gameId === 'game-rubik') initRubik();
+            if(gameId === 'game-mastermind') initMastermind('easy');
+        }
+
+        /* --- SENTENCE LAB --- */
+        function checkSentence(selectElement, correctWord, tickId) {
+            const tick = document.getElementById(tickId);
+            if (selectElement.value === correctWord) {
+                tick.innerHTML = '✅ Correct!';
+                tick.style.color = 'var(--accent-green)';
+                tick.style.display = 'inline-block';
+                selectElement.style.borderColor = 'var(--accent-green)';
+            } else {
+                if(selectElement.value !== "") {
+                    tick.innerHTML = '❌ Try again!';
+                    tick.style.color = 'var(--accent-red)';
+                    tick.style.display = 'inline-block';
+                    selectElement.style.borderColor = 'var(--accent-red)';
+                } else {
+                    tick.style.display = 'none';
+                    selectElement.style.borderColor = 'var(--text-secondary)';
+                }
+            }
+        }
+
+        function initApp() { 
+            // App initialized
+        }
+
+        /* 1. HOUSE GAME LOGIC */
+        const gridSize = 5;
+        let playerPos = { x: 2, y: 2 };
+        const gridMap = [[0,0,0,0,0],[0,1,0,1,0],[0,0,0,0,0],[0,1,0,1,0],[0,0,0,0,0]];
+        const houseData = {
+            sandringham: { champion: "Mr Moon", x: 0, y: 0, points: 0, icon: "☀️", baseClass: "base-yellow", img: "mr-moon.png" },
+            caernarfon: { champion: "Mrs Martin", x: 4, y: 0, points: 0, icon: "🍃", baseClass: "base-green", img: "mrs-martin.png" },
+            windsor: { champion: "Mr Mertz", x: 4, y: 4, points: 0, icon: "🛡️", baseClass: "base-red", img: "mr-mertz.png" },
+            balmoral: { champion: "Mr Padley", x: 0, y: 4, points: 0, icon: "🌊", baseClass: "base-blue", img: "mr-padley.png" },
+        };
+
+        function initGrid() {
+            const gridEl = document.getElementById('game-grid');
+            if (!gridEl) return;
+            gridEl.innerHTML = '';
+            for (let y = 0; y < gridSize; y++) {
+                for (let x = 0; x < gridSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'game-cell'; cell.id = `cell-${x}-${y}`;
+                    if (gridMap[y][x] === 1) { cell.classList.add('cell-obstacle'); cell.innerText = '🧱'; }
+                    gridEl.appendChild(cell);
+                }
+            }
+            Object.keys(houseData).forEach(key => {
+                const h = houseData[key];
+                const cell = document.getElementById(`cell-${h.x}-${h.y}`);
+                if (cell) {
+                    cell.classList.add(h.baseClass); 
+                    cell.innerText = h.icon;
+                }
+            });
+            const player = document.createElement('div');
+            player.id = 'player'; player.innerText = '🤖';
+            gridEl.appendChild(player);
+            
+            playerPos = { x: 2, y: 2 };
+            updatePlayerDOM();
+        }
+
+        function updatePlayerDOM() {
+            const player = document.getElementById('player');
+            const grid = document.getElementById('game-grid');
+            if (!player || !grid) return;
+            const step = grid.offsetWidth / gridSize;
+            player.style.left = `${playerPos.x * step}px`;
+            player.style.top = `${playerPos.y * step}px`;
+        }
+
+        function movePlayer(dir) {
+            let nextX = playerPos.x; let nextY = playerPos.y;
+            if (dir === 'up' && playerPos.y > 0) nextY--;
+            if (dir === 'down' && playerPos.y < gridSize - 1) nextY++;
+            if (dir === 'left' && playerPos.x > 0) nextX--;
+            if (dir === 'right' && playerPos.x < gridSize - 1) nextX++;
+            
+            if (gridMap[nextY][nextX] === 1) return;
+            playerPos.x = nextX; playerPos.y = nextY;
+            updatePlayerDOM();
+
+            Object.keys(houseData).forEach(key => {
+                const h = houseData[key];
+                if (playerPos.x === h.x && playerPos.y === h.y) {
+                    h.points++; 
+                    document.getElementById(`score-${key}`).innerText = h.points;
+                    
+                    if (h.points >= 5) {
+                        alert(`That's too many house points for ${h.champion} to hold! Resetting to 0.`);
+                        h.points = 0; 
+                        document.getElementById(`score-${key}`).innerText = '0';
+                    }
+                    playerPos = { x: 2, y: 2 };
+                    setTimeout(updatePlayerDOM, 250);
+                }
+            });
+        }
+        function resetHouseGame() {
+            Object.keys(houseData).forEach(key => { 
+                houseData[key].points = 0; 
+                const m = document.getElementById(`score-${key}`); 
+                if (m) m.innerText = '0'; 
+            });
+            playerPos = { x: 2, y: 2 }; updatePlayerDOM();
+        }
+
+        /* 2. BINARY PIXEL */
+        function initBinary() {
+            const container = document.getElementById('binary-art');
+            if(!container) return;
+            container.innerHTML = '';
+            for(let i = 0; i < 25; i++) {
+                const cell = document.createElement('div'); 
+                cell.className = 'binary-cell'; 
+                cell.innerText = '0';
+                cell.onclick = function() {
+                    this.classList.toggle('on');
+                    this.innerText = this.classList.contains('on') ? '1' : '0';
+                    updateBinaryOutput();
+                };
+                container.appendChild(cell);
+            }
+            updateBinaryOutput();
+        }
+        function updateBinaryOutput() {
+            const cells = document.querySelectorAll('#binary-art .binary-cell');
+            let binString = ""; 
+            cells.forEach(c => binString += c.classList.contains('on') ? '1' : '0');
+            const outputEl = document.getElementById('binary-output');
+            if (outputEl) {
+                outputEl.innerText = binString.match(/.{1,5}/g).join(" ");
+            }
+        }
+        function clearBinary() { initBinary(); }
+
+        /* 3. RUBIK'S 3x3 ALGORITHM */
+        const rubikColors = ['var(--rubik-w)', 'var(--rubik-r)', 'var(--rubik-b)', 'var(--rubik-g)', 'var(--rubik-y)', 'var(--rubik-o)'];
+        let rubikTarget = []; let rubikCurrent = [];
+        
+        function initRubik() {
+            const targetEl = document.getElementById('rubik-target-display');
+            const gridEl = document.getElementById('rubik-grid');
+            document.getElementById('rubik-msg').innerText = '';
+            targetEl.innerHTML = ''; gridEl.innerHTML = '';
+            rubikTarget = []; rubikCurrent = [];
+
+            for(let i=0; i<9; i++) {
+                let rColor = rubikColors[Math.floor(Math.random() * (rubikColors.length - 1)) + 1];
+                rubikTarget.push(rColor);
+                
+                let tBox = document.createElement('div');
+                tBox.className = 'rubik-cell';
+                tBox.style.backgroundColor = rColor;
+                targetEl.appendChild(tBox);
+            }
+
+            for(let i=0; i<9; i++) {
+                rubikCurrent.push(0);
+                let cell = document.createElement('div');
+                cell.className = 'rubik-cell interactive';
+                cell.style.backgroundColor = rubikColors[0];
+                cell.onclick = function() {
+                    rubikCurrent[i] = (rubikCurrent[i] + 1) % rubikColors.length;
+                    this.style.backgroundColor = rubikColors[rubikCurrent[i]];
+                    checkRubikWin();
+                };
+                gridEl.appendChild(cell);
+            }
+        }
+        
+        function checkRubikWin() {
+            let hasWon = true;
+            for(let i=0; i<9; i++) {
+                if(rubikColors[rubikCurrent[i]] !== rubikTarget[i]) {
+                    hasWon = false;
+                    break;
+                }
+            }
+            if(hasWon) {
+                const msg = document.getElementById('rubik-msg');
+                msg.innerHTML = "✅ Pattern Matched! Outstanding logic!";
+                msg.style.color = "var(--accent-green)";
+            }
+        }
+
+        /* 4. HOUSE MASTERMIND */
+        const mmColors = ['var(--rubik-y)', 'var(--rubik-g)', 'var(--rubik-r)', 'var(--rubik-b)'];
+        let mmSecret = []; let mmGuess = []; let mmLength = 4;
+        
+        function setMMMode(mode) {
+            if(mode === 'easy') mmLength = 2;
+            else if(mode === 'medium') mmLength = 4;
+            else if(mode === 'hard') mmLength = 8;
+            else if(mode === 'extreme') mmLength = 12;
+            initMastermind(mode);
+        }
+
+        function initMastermind(mode) {
+            if(!mode) mode = 'easy';
+            if(mode === 'easy') mmLength = 2;
+            else if(mode === 'medium') mmLength = 4;
+            else if(mode === 'hard') mmLength = 8;
+            else if(mode === 'extreme') mmLength = 12;
+
+            mmSecret = []; mmGuess = [];
+            document.getElementById('mm-msg').innerText = '';
+            const board = document.getElementById('mm-board');
+            board.innerHTML = '';
+
+            for(let i=0; i<mmLength; i++) {
+                mmSecret.push(Math.floor(Math.random() * mmColors.length));
+                mmGuess.push(0);
+            }
+
+            const row = document.createElement('div');
+            row.className = 'mm-row';
+            row.id = 'mm-active-row';
+
+            for(let i=0; i<mmLength; i++) {
+                const peg = document.createElement('div');
+                peg.className = 'mm-peg';
+                peg.style.backgroundColor = mmColors[0];
+                peg.dataset.index = i;
+                peg.onclick = function() {
+                    let idx = parseInt(this.dataset.index);
+                    mmGuess[idx] = (mmGuess[idx] + 1) % mmColors.length;
+                    this.style.backgroundColor = mmColors[mmGuess[idx]];
+                };
+                row.appendChild(peg);
+            }
+
+            const res = document.createElement('div');
+            res.className = 'mm-result';
+            res.id = 'mm-res';
+            res.innerText = '';
+            row.appendChild(res);
+
+            board.appendChild(row);
+        }
+
+        function submitMMGuess() {
+            let correct = true;
+            for(let i=0; i<mmLength; i++) {
+                if(mmGuess[i] !== mmSecret[i]) {
+                    correct = false;
+                    break;
+                }
+            }
+            const res = document.getElementById('mm-res');
+            const msg = document.getElementById('mm-msg');
+            if(correct) {
+                res.innerText = '✅';
+                msg.innerHTML = "🎉 Mastermind code cracked! Incredible logic!";
+                msg.style.color = "var(--accent-green)";
+            } else {
+                res.innerText = '❌';
+                msg.innerHTML = "❌ Incorrect sequence. Try changing some colours!";
+                msg.style.color = "var(--accent-red)";
+            }
+        }
+
+        /* 5. SECRET VAULT */
+        function checkVault() {
+            const a1 = document.getElementById('v1').value.trim().toLowerCase();
+            const a2 = document.getElementById('v2').value.trim().toLowerCase();
+            const a3 = document.getElementById('v3').value.trim().toLowerCase();
+            const a4 = document.getElementById('v4').value;
+            const a5 = document.getElementById('v5').value;
+            const msg = document.getElementById('vault-msg');
+
+            const isQ1 = (a1 === '1843');
+            const isQ2 = (a2 === 'hopper' || a2 === 'grace hopper');
+            const isQ3 = (a3 === 'swift');
+            const isQ4 = (a4 === 'JavaScript');
+            const isQ5 = (a5 === 'Tim Berners-Lee');
+
+            if(isQ1 && isQ2 && isQ3 && isQ4 && isQ5) {
+                msg.innerHTML = "🎉 ACCESS GRANTED: You cracked the code! You are a NAIS HK Master Coder! 🏆";
+                msg.style.color = "var(--terminal-green)";
+            } else {
+                msg.innerHTML = "❌ ACCESS DENIED: One or more answers are incorrect.";
+                msg.style.color = "var(--accent-red)";
+            }
+        }
+
+    </script>
+</body>
+</html>
